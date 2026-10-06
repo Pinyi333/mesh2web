@@ -1,0 +1,39 @@
+{
+  "name": "@mesh2web/presets",
+  "version": "0.1.0",
+  "description": "Optimization and lighting presets shared by mesh2web packages.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./optimize.json": "./src/optimize.json",
+    "./lighting.json": "./src/lighting.json"
+  },
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinyi333/mesh2web.git",
+    "directory": "packages/presets"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "pinyi333",
+  "homepage": "https://github.com/pinyi333/mesh2web#readme",
+  "bugs": {
+    "url": "https://github.com/pinyi333/mesh2web/issues"
+  },
+  "keywords": [
+    "3d",
+    "gltf",
+    "glb",
+    "three.js",
+    "web-component",
+    "optimization",
+    "meshopt",
+    "gsap"
+  ]
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · product viewer</title>
+  <style>
+    :root { --bg: #f2efe9; --fg: #161616; --muted: #77736c; --line: #dcd8d0; }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; min-height: 100vh; }
+    main { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); min-height: 100vh; }
+    .stage { position: relative; background: radial-gradient(80% 70% at 50% 40%, #fff, var(--bg)); }
+    .stage web-model { position: absolute; inset: 0; width: auto; height: auto; --web-model-aspect-ratio: auto; --web-model-accent: var(--fg); }
+    .info { padding: clamp(24px, 5vw, 64px); display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+    h1 { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.03em; line-height: 1; font-weight: 600; }
+    .label { font: 500 12px/1 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .swatch { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; outline: 1px solid var(--line); cursor: pointer; }
+    .swatch[aria-pressed="true"] { border-color: var(--bg); outline: 2px solid var(--fg); }
+    button.view { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line); background: none; cursor: pointer; font: inherit; }
+    button.view:hover { border-color: var(--fg); }
+    select { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+    @media (max-width: 800px) { main { grid-template-columns: minmax(0, 1fr); } .stage { height: 60vh; } }
+  </style>
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+</head>
+<body>
+  <main>
+    <div class="stage">
+      <web-model
+        src="../basic/models/sculpture.glb"
+        lod-src="../basic/models/sculpture.lod1.glb"
+        poster="../basic/models/sculpture.webp"
+        alt="Ceramic sculpture, configurable glaze color"
+        lighting="studio-soft"
+        gesture="page-first"
+        loading="eager"
+      ></web-model>
+    </div>
+    <div class="info">
+      <h1>Sculpture No. 1</h1>
+      <div>
+        <p class="label">Glaze</p>
+        <div class="row" data-swatches>
+          <button class="swatch" style="background:#dcd1c2" data-color="#dcd1c2" aria-pressed="true" aria-label="Cream"></button>
+          <button class="swatch" style="background:#2c2c30" data-color="#2c2c30" aria-pressed="false" aria-label="Graphite"></button>
+          <button class="swatch" style="background:#b6533a" data-color="#b6533a" aria-pressed="false" aria-label="Terracotta"></button>
+          <button class="swatch" style="background:#7d9a86" data-color="#7d9a86" aria-pressed="false" aria-label="Sage"></button>
+        </div>
+      </div>
+      <div>
+        <p class="label">View</p>
+        <div class="row">
+          <button class="view" data-view="0 80 3.7">Front</button>
+          <button class="view" data-view="90 80 3.7">Side</button>
+          <button class="view" data-view="30 20 3.4">Top</button>
+          <button class="view" data-view="200 95 2.9">Detail</button>
+        </div>
+      </div>
+      <div>
+        <p class="label">Lighting</p>
+        <select data-lighting>
+          <option>studio-soft</option><option>studio-hard</option><option>outdoor</option><option>neon</option><option>flat</option>
+        </select>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    const model = document.querySelector('web-model');
+    await model.ready;
+
+    // Advanced API: model.scene is the three.js scene once loaded.
+    const glaze = [];
+    model.scene.traverse((o) => { if (o.isMesh && o.material.name === 'Ceramic') glaze.push(o.material); });
+
+    document.querySelectorAll('[data-color]').forEach((swatch) => {
+      swatch.addEventListener('click', () => {
+        document.querySelectorAll('[data-color]').forEach((s) => s.setAttribute('aria-pressed', String(s === swatch)));
+        glaze.forEach((m) => m.color.set(swatch.dataset.color));
+        model.invalidate();
+      });
+    });
+
+    // Smoothly move the camera without any animation library.
+    const animateCamera = (to, duration = 900) => {
+      const from = { ...model.camera, azimuth: model.camera.azimuth, polar: model.camera.polar, distance: model.camera.distance };
+      // Take the short way around.
+      to.azimuth = from.azimuth + ((((to.azimuth - from.azimuth) % 360) + 540) % 360) - 180;
+      const start = performance.now();
+      const ease = (t) => 1 - Math.pow(1 - t, 4);
+      const step = (now) => {
+        const t = model.reducedMotion ? 1 : Math.min(1, (now - start) / duration);
+        for (const k of ['azimuth', 'polar', 'distance']) model.camera[k] = from[k] + (to[k] - from[k]) * ease(t);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    document.querySelectorAll('[data-view]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const [azimuth, polar, distance] = button.dataset.view.split(' ').map(Number);
+        animateCamera({ azimuth, polar, distance });
+      });
+    });
+
+    document.querySelector('[data-lighting]').addEventListener('change', (e) => { model.lighting = e.target.value; });
+  </script>
+</body>
+</html>

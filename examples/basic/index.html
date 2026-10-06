@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · basic</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #efece6; font-family: system-ui, sans-serif; }
+    web-model { width: min(720px, 100vw - 32px); --web-model-accent: #1a1a1a; }
+  </style>
+  <!-- In your project: https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js -->
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+</head>
+<body>
+  <web-model
+    src="models/sculpture.glb"
+    lod-src="models/sculpture.lod1.glb"
+    alt="A cream ceramic sculpture circled by a thin gold ribbon"
+    lighting="studio-soft"
+    controls="orbit"
+    autorotate
+    loading="lazy"
+  >
+    <noscript><p>A cream ceramic sculpture circled by a thin gold ribbon.</p></noscript>
+  </web-model>
+</body>
+</html>

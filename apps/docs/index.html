@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web — any 3D model, web-ready</title>
+  <meta name="description" content="Open-source pipeline that turns any 3D model into a lightweight, beautiful, embeddable web component. CLI, in-browser Studio and a framework-free <web-model> element.">
+  <meta property="og:title" content="mesh2web — any 3D model, web-ready">
+  <meta property="og:description" content="34 MB → 556 KB. Optimize, embed and scroll-animate 3D on the web. MIT licensed.">
+  <meta property="og:image" content="models/sculpture.webp">
+  <meta name="theme-color" content="#0b0b0c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 10v12L16 29 4 22V10z' fill='none' stroke='%23d4ff3a' stroke-width='2.5'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preload" as="image" href="models/sculpture.webp">
+  <script>document.documentElement.classList.add('js');</script>
+  <script type="module" src="vendor/element/web-model.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- Preloader: counts real model download progress -->
+  <div class="preloader" aria-hidden="true">
+    <div class="preloader__inner">
+      <span class="preloader__label">mesh2web</span>
+      <span class="preloader__count" data-count>0</span>
+    </div>
+  </div>
+
+  <header class="nav">
+    <a class="nav__logo" href="#top" aria-label="mesh2web home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 10v12L16 29 4 22V10z"/><path d="M4 10l12 7 12-7M16 17v12"/></svg>
+      <span>mesh2web</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#element">Element</a>
+      <a href="#usage">Usage</a>
+      <a href="studio/">Studio</a>
+    </nav>
+    <a class="nav__cta" href="https://github.com/pinyi333/mesh2web" data-magnetic>
+      <span>GitHub</span><span aria-hidden="true">↗</span>
+    </a>
+  </header>
+
+  <main id="main">
+    <!-- ============================== HERO ============================== -->
+    <section class="hero" id="top">
+      <div class="hero__copy">
+        <p class="eyebrow" data-hero-fade>Open source · MIT · No framework required</p>
+        <h1 class="hero__title">Any 3D model.<br><em>Web-ready</em> in<br>one command.</h1>
+        <p class="hero__lead" data-hero-fade>mesh2web inspects, cleans, simplifies and compresses your models, then ships them in a lightweight <code>&lt;web-model&gt;</code> element built for scroll stories and GSAP.</p>
+        <div class="hero__actions" data-hero-fade>
+          <button class="command" type="button" data-copy="npx @mesh2web/cli optimize model.glb" data-magnetic>
+            <span class="command__prompt" aria-hidden="true">$</span>
+            <span class="command__text">npx @mesh2web/cli optimize model.glb</span>
+            <span class="command__hint" data-copy-label>Copy</span>
+          </button>
+          <a class="link-arrow" href="studio/">Try Studio in your browser <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <div class="hero__stage" data-hero-model>
+        <web-model
+          id="hero-model"
+          src="models/sculpture.glb"
+          lod-src="models/sculpture.lod1.glb"
+          poster="models/sculpture.webp"
+          alt="A cream ceramic sculpture circled by a thin gold ribbon, slowly rotating"
+          lighting="studio-soft"
+          camera-orbit="-20 72 3.3"
+          autorotate
+          loading="eager"
+        >
+          <img src="models/sculpture.webp" alt="A cream ceramic sculpture circled by a thin gold ribbon">
+        </web-model>
+        <p class="hero__caption" aria-hidden="true"><span>Drag to rotate</span><span>219 KB · 52k tris</span></p>
+      </div>
+      <div class="hero__scroll" aria-hidden="true"><span></span>Scroll</div>
+    </section>
+
+    <!-- ============================== MARQUEE ============================== -->
+    <section class="marquee" aria-label="Benchmark highlights">
+      <div class="marquee__track" data-marquee>
+        <span>34.0 MB → 556 KB</span><i aria-hidden="true">✦</i>
+        <span>348k → 78k triangles</span><i aria-hidden="true">✦</i>
+        <span>2.9 s on slow 4G</span><i aria-hidden="true">✦</i>
+        <span>4 KB element shell</span><i aria-hidden="true">✦</i>
+      </div>
+    </section>
+
+    <!-- ============================== PIPELINE STORY (pinned) ============================== -->
+    <section class="story" id="pipeline" aria-labelledby="story-title">
+      <div class="story__pin">
+        <div class="story__model">
+          <web-model
+            id="story-model"
+            src="models/sculpture.glb"
+            lod-src="models/sculpture.lod1.glb"
+            poster="models/sculpture.webp"
+            alt="The same sculpture, rotating as you scroll through the optimization pipeline"
+            lighting="studio-hard"
+            controls="none"
+            camera-orbit="0 80 3.7"
+            loading="lazy"
+          ></web-model>
+          <div class="story__meter" aria-hidden="true">
+            <span class="story__meter-label">File size</span>
+            <span class="story__meter-value" data-meter>34.0 MB</span>
+            <span class="story__meter-bar"><span data-meter-bar></span></span>
+          </div>
+        </div>
+        <div class="story__steps">
+          <h2 class="story__title" id="story-title"><span class="eyebrow">The pipeline</span>From raw export to <em>shipped</em></h2>
+          <ol class="steps">
+            <li class="step" data-step="0" data-size="34.0 MB" data-ratio="1">
+              <span class="step__index">01</span>
+              <h3>Inspect</h3>
+              <p>A health check flags 4K textures, missing normals, centimeter units, Z-up exports and dead data, each with a suggested fix.</p>
+            </li>
+            <li class="step" data-step="1" data-size="12.3 MB" data-ratio="0.36">
+              <span class="step__index">02</span>
+              <h3>Clean</h3>
+              <p>Weld duplicate vertices, prune unused meshes and materials, join meshes that share a material, and generate smooth normals.</p>
+            </li>
+            <li class="step" data-step="2" data-size="4.6 MB" data-ratio="0.136">
+              <span class="step__index">03</span>
+              <h3>Simplify</h3>
+              <p>meshoptimizer reduces triangles to the preset's budget while preserving silhouette and UV seams, then builds LODs.</p>
+            </li>
+            <li class="step" data-step="3" data-size="556 KB" data-ratio="0.016">
+              <span class="step__index">04</span>
+              <h3>Compress</h3>
+              <p>Meshopt or Draco geometry, WebP textures capped per preset. A JSON + HTML report shows the before and after.</p>
+            </li>
+            <li class="step" data-step="4" data-size="556 KB" data-ratio="0.016">
+              <span class="step__index">05</span>
+              <h3>Ship</h3>
+              <p>A poster, an embed snippet and a 4 KB element that lazy-loads three.js only when the model scrolls into view.</p>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== FEATURES ============================== -->
+    <section class="features" id="element" aria-labelledby="features-title">
+      <header class="section-head">
+        <p class="eyebrow" data-reveal>The &lt;web-model&gt; element</p>
+        <h2 id="features-title" class="section-title" data-split>Declarative HTML for 90% of cases. A JS API for the rest.</h2>
+      </header>
+      <ul class="features__grid">
+        <li class="feature" data-reveal>
+          <span class="feature__num">A</span>
+          <h3>Poster first</h3>
+          <p>A poster fills the reserved box immediately, so LCP is unaffected and nothing shifts. The model fades in when it's ready.</p>
+        </li>
+        <li class="feature" data-reveal>
+          <span class="feature__num">B</span>
+          <h3>Adaptive quality</h3>
+          <p>Picks a LOD and pixel ratio from GPU, memory and screen, and steps down automatically if frame rate drops.</p>
+        </li>
+        <li class="feature" data-reveal>
+          <span class="feature__num">C</span>
+          <h3>Zero idle cost</h3>
+          <p>Renders on demand only. Pauses off-screen and in hidden tabs. three.js loads lazily as a separate chunk.</p>
+        </li>
+        <li class="feature" data-reveal>
+          <span class="feature__num">D</span>
+          <h3>Page-first gestures</h3>
+          <p>One finger scrolls the page, a horizontal swipe or two fingers rotate the model. Wheel zoom needs Ctrl/⌘.</p>
+        </li>
+        <li class="feature" data-reveal>
+          <span class="feature__num">E</span>
+          <h3>Tuned lighting</h3>
+          <p>Five presets with environment, tone mapping and a soft contact shadow, so models never look flat or grey.</p>
+        </li>
+        <li class="feature" data-reveal>
+          <span class="feature__num">F</span>
+          <h3>Accessible</h3>
+          <p>Uses <code>role="img"</code> and an ARIA label, rotates with the arrow keys, and honors <code>prefers-reduced-motion</code>. Falls back to the poster without WebGL.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============================== LIGHTING PLAYGROUND ============================== -->
+    <section class="lab" aria-labelledby="lab-title">
+      <div class="lab__copy">
+        <p class="eyebrow" data-reveal>Lighting presets</p>
+        <h2 id="lab-title" class="section-title" data-split>One attribute changes the mood.</h2>
+        <div class="lab__switch" role="radiogroup" aria-label="Lighting preset" data-reveal>
+          <button type="button" role="radio" aria-checked="true" data-lighting="studio-soft">studio-soft</button>
+          <button type="button" role="radio" aria-checked="false" data-lighting="studio-hard">studio-hard</button>
+          <button type="button" role="radio" aria-checked="false" data-lighting="outdoor">outdoor</button>
+          <button type="button" role="radio" aria-checked="false" data-lighting="neon">neon</button>
+          <button type="button" role="radio" aria-checked="false" data-lighting="flat">flat</button>
+        </div>
+        <pre class="code code--inline" data-reveal><code>&lt;web-model src="sculpture.glb" lighting="<span class="hl" data-lighting-label>studio-soft</span>"&gt;</code></pre>
+      </div>
+      <div class="lab__stage" data-reveal>
+        <web-model
+          id="lab-model"
+          src="models/sculpture.glb"
+          lod-src="models/sculpture.lod1.glb"
+          poster="models/sculpture.webp"
+          alt="The sculpture under the selected lighting preset"
+          lighting="studio-soft"
+          camera-orbit="35 70 3.8"
+          gesture="page-first"
+        ></web-model>
+      </div>
+    </section>
+
+    <!-- ============================== USAGE ============================== -->
+    <section class="usage" id="usage" aria-labelledby="usage-title">
+      <header class="section-head">
+        <p class="eyebrow" data-reveal>Usage</p>
+        <h2 id="usage-title" class="section-title" data-split>Three steps. No build step required.</h2>
+      </header>
+      <div class="tabs" data-reveal>
+        <div class="tabs__list" role="tablist" aria-label="Usage examples">
+          <button role="tab" id="tab-cli" aria-controls="panel-cli" aria-selected="true">1 · Optimize</button>
+          <button role="tab" id="tab-html" aria-controls="panel-html" aria-selected="false" tabindex="-1">2 · Embed</button>
+          <button role="tab" id="tab-gsap" aria-controls="panel-gsap" aria-selected="false" tabindex="-1">3 · Animate</button>
+        </div>
+        <div class="tabs__panel" role="tabpanel" id="panel-cli" aria-labelledby="tab-cli">
+<pre class="code"><code><span class="c"># Health check: counts, textures, issues and fixes</span>
+npx @mesh2web/cli inspect robot.glb
+
+<span class="c"># Optimize with a preset: hero · product · ambient</span>
+npx @mesh2web/cli optimize robot.glb --preset hero --poster
+
+<span class="c"># Batch + watch with mesh2web.config.json (exit code 2 if over budget)</span>
+npx @mesh2web/cli build --watch</code></pre>
+        </div>
+        <div class="tabs__panel" role="tabpanel" id="panel-html" aria-labelledby="tab-html" hidden>
+<pre class="code"><code>&lt;script type="module"
+  src="https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js"&gt;&lt;/script&gt;
+
+&lt;web-model
+  src="/3d/robot.glb"
+  lod-src="/3d/robot.lod1.glb /3d/robot.lod2.glb"
+  poster="/3d/robot.webp"
+  alt="A floating robot mascot"
+  lighting="studio-soft"
+  autorotate
+  loading="lazy"
+&gt;&lt;/web-model&gt;</code></pre>
+        </div>
+        <div class="tabs__panel" role="tabpanel" id="panel-gsap" aria-labelledby="tab-gsap" hidden>
+<pre class="code"><code>const model = document.querySelector('web-model');
+
+gsap.timeline({
+  scrollTrigger: { trigger: '#story', start: 'top top', end: '+=2000', scrub: true, pin: true },
+})
+  .to(model.camera, { azimuth: 180, distance: 4 })
+  .to(model.animation, { progress: 1 }, 0)
+  .to(model, { exposure: 1.4 }, 0.5);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== PACKAGES ============================== -->
+    <section class="packages" aria-labelledby="packages-title">
+      <header class="section-head">
+        <p class="eyebrow" data-reveal>Packages</p>
+        <h2 id="packages-title" class="section-title" data-split>Use the whole chain, or just the link you need.</h2>
+      </header>
+      <ul class="pkg-list">
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/cli"><span class="pkg__name">@mesh2web/cli</span><span class="pkg__desc">inspect · optimize · build --watch · CI budgets</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/element"><span class="pkg__name">@mesh2web/element</span><span class="pkg__desc">&lt;web-model&gt; Web Component + GSAP bridge</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/core"><span class="pkg__name">@mesh2web/core</span><span class="pkg__desc">Pipeline for Node and browsers, built on glTF-Transform</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="studio/"><span class="pkg__name">mesh2web Studio</span><span class="pkg__desc">Drag and drop. Your model never leaves the browser.</span><span class="pkg__arrow" aria-hidden="true">→</span></a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p class="footer__big" aria-hidden="true">mesh2web</p>
+    <div class="footer__row">
+      <p>MIT licensed. Built on three.js, glTF-Transform and meshoptimizer.</p>
+      <p><a href="https://github.com/pinyi333/mesh2web">GitHub</a> · <a href="https://github.com/pinyi333/mesh2web/blob/main/README.zh-TW.md">繁體中文</a> · <a href="studio/">Studio</a></p>
+    </div>
+  </footer>
+
+  <script src="vendor/lib/gsap.min.js"></script>
+  <script src="vendor/lib/ScrollTrigger.min.js"></script>
+  <script src="vendor/lib/SplitText.min.js"></script>
+  <script src="vendor/lib/lenis.min.js"></script>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

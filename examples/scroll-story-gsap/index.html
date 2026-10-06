@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · scroll story with GSAP</title>
+  <style>
+    :root { --bg: #0e0e10; --fg: #f1ede6; --muted: #8b877f; }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--bg); color: var(--fg); font: 18px/1.5 system-ui, sans-serif; }
+    header, footer { min-height: 70vh; display: grid; place-items: center; padding: 16px; text-align: center; }
+    h1 { font-size: clamp(2.5rem, 8vw, 6rem); letter-spacing: -0.04em; line-height: 0.95; font-weight: 600; }
+    p.lead { color: var(--muted); margin-top: 16px; }
+    #story { position: relative; height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: 0 clamp(16px, 4vw, 48px); }
+    #story web-model { width: 100%; height: 80vh; --web-model-aspect-ratio: auto; }
+    .chapters { position: relative; height: 12em; }
+    .chapter { position: absolute; inset: 0; opacity: 0; }
+    .chapter:first-child { opacity: 1; }
+    .chapter h2 { font-size: clamp(2rem, 4vw, 3.5rem); letter-spacing: -0.03em; font-weight: 600; }
+    .chapter p { color: var(--muted); margin-top: 12px; max-width: 26em; }
+    @media (max-width: 760px) {
+      #story { grid-template-columns: minmax(0, 1fr); grid-template-rows: 55vh 1fr; align-items: start; }
+      #story web-model { height: 55vh; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .chapter { position: static; opacity: 1; margin-bottom: 2em; }
+      .chapters { height: auto; }
+      #story { height: auto; padding-block: 64px; }
+    }
+  </style>
+  <!-- In your project: https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js -->
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+</head>
+<body>
+  <header>
+    <div><h1>Scroll to orbit</h1><p class="lead">The camera, exposure and copy share one ScrollTrigger timeline.</p></div>
+  </header>
+
+  <section id="story">
+    <web-model
+      src="../basic/models/sculpture.glb"
+      lod-src="../basic/models/sculpture.lod1.glb"
+      poster="../basic/models/sculpture.webp"
+      alt="A ceramic sculpture with a gold ribbon, rotating as the page scrolls"
+      lighting="studio-hard"
+      controls="none"
+      loading="eager"
+    ></web-model>
+    <div class="chapters">
+      <article class="chapter"><h2>Front</h2><p>Each chapter maps to one second of the timeline.</p></article>
+      <article class="chapter"><h2>Side</h2><p><code>model.camera.azimuth</code> is a plain number, so GSAP tweens it directly.</p></article>
+      <article class="chapter"><h2>Above</h2><p>Polar angle and distance move the camera up and in.</p></article>
+      <article class="chapter"><h2>Glow</h2><p>Exposure is tweenable too.</p></article>
+    </div>
+  </section>
+
+  <footer><p class="lead">The end. Scroll back up to rewind.</p></footer>
+
+  <script type="module">
+    import { scrollModel } from '../../packages/element/dist/gsap.js';
+    // In your project: import { scrollModel } from '@mesh2web/element/gsap';
+
+    gsap.registerPlugin(ScrollTrigger);
+    const model = document.querySelector('web-model');
+
+    if (!model.reducedMotion) {
+      // 1) The model: the bridge waits for `model.ready` and builds the timeline.
+      const tl = await scrollModel(gsap, model, {
+        scrollTrigger: { trigger: '#story', start: 'top top', end: '+=3000', scrub: 0.6, pin: true },
+        steps: [
+          { camera: { azimuth: 90 }, at: 0 },
+          { camera: { azimuth: 180, polar: 35, distance: 3.1 }, at: 1 },
+          { camera: { azimuth: 360, polar: 75, distance: 3.7 }, at: 2 },
+          { exposure: 1.6, at: 2 },
+        ],
+      });
+
+      // 2) The copy: add plain GSAP tweens to the same timeline.
+      const chapters = gsap.utils.toArray('.chapter');
+      chapters.forEach((chapter, i) => {
+        if (i === 0) return;
+        tl.to(chapters[i - 1], { autoAlpha: 0, y: -30, duration: 0.2 }, i - 0.2)
+          .fromTo(chapter, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.3 }, i);
+      });
+    }
+  </script>
+</body>
+</html>

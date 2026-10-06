@@ -1,0 +1,70 @@
+{
+  "name": "@mesh2web/element",
+  "version": "0.1.0",
+  "description": "<web-model>: a lightweight, framework-free Web Component for 3D models with posters, lazy loading, lighting presets and GSAP-friendly APIs.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "jsdelivr": "./dist/web-model.js",
+  "unpkg": "./dist/web-model.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./gsap": {
+      "types": "./src/gsap.d.ts",
+      "import": "./src/gsap.js"
+    },
+    "./bundle": "./dist/web-model.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "@mesh2web/presets": "0.1.0",
+    "three": "^0.186.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinyi333/mesh2web.git",
+    "directory": "packages/element"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "pinyi333",
+  "homepage": "https://github.com/pinyi333/mesh2web#readme",
+  "bugs": {
+    "url": "https://github.com/pinyi333/mesh2web/issues"
+  },
+  "keywords": [
+    "3d",
+    "gltf",
+    "glb",
+    "three.js",
+    "web-component",
+    "optimization",
+    "meshopt",
+    "gsap"
+  ],
+  "peerDependencies": {
+    "gsap": "^3.12.0"
+  },
+  "peerDependenciesMeta": {
+    "gsap": {
+      "optional": true
+    }
+  },
+  "sideEffects": [
+    "./src/index.js",
+    "./dist/*"
+  ],
+  "scripts": {
+    "build": "node ../../scripts/build.js",
+    "prepublishOnly": "node ../../scripts/build.js"
+  }
+}

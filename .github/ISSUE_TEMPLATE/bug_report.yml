@@ -1,0 +1,28 @@
+name: Bug report
+description: Something is broken
+labels: [bug]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options: ["@mesh2web/cli", "@mesh2web/element", "@mesh2web/core", "Studio", "Docs"]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the command or HTML you used, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: model
+    attributes:
+      label: Model
+      description: If possible, attach or link a model that reproduces the issue (only share models you have the rights to).
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "mesh2web 0.1.0 · Node 22 · Chrome 140 on macOS"

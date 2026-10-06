@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an idea or a new preset
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Which step of "export → optimize → embed → present" is painful?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal

@@ -1,0 +1,166 @@
+{
+  "studio-soft": {
+    "description": "Soft studio light. Neutral and forgiving, the default.",
+    "environment": "room",
+    "environmentIntensity": 0.7,
+    "exposure": 0.9,
+    "toneMapping": "aces",
+    "background": null,
+    "lights": [
+      {
+        "type": "directional",
+        "color": "#ffffff",
+        "intensity": 0.8,
+        "position": [
+          3,
+          5,
+          4
+        ]
+      },
+      {
+        "type": "hemisphere",
+        "sky": "#ffffff",
+        "ground": "#b9b4ad",
+        "intensity": 0.25
+      }
+    ],
+    "shadow": {
+      "opacity": 0.28,
+      "blur": 2.5
+    }
+  },
+  "studio-hard": {
+    "description": "Contrasty key light with crisp shadows, for dramatic product shots.",
+    "environment": "room",
+    "environmentIntensity": 0.45,
+    "exposure": 1.05,
+    "toneMapping": "aces",
+    "background": null,
+    "lights": [
+      {
+        "type": "directional",
+        "color": "#ffffff",
+        "intensity": 3.2,
+        "position": [
+          -4,
+          6,
+          2
+        ]
+      },
+      {
+        "type": "directional",
+        "color": "#9fb6ff",
+        "intensity": 0.6,
+        "position": [
+          4,
+          2,
+          -4
+        ]
+      }
+    ],
+    "shadow": {
+      "opacity": 0.6,
+      "blur": 1
+    }
+  },
+  "outdoor": {
+    "description": "Warm sun and cool sky fill.",
+    "environment": "room",
+    "environmentIntensity": 0.7,
+    "exposure": 1.1,
+    "toneMapping": "agx",
+    "background": null,
+    "lights": [
+      {
+        "type": "directional",
+        "color": "#fff1dc",
+        "intensity": 2.6,
+        "position": [
+          6,
+          8,
+          3
+        ]
+      },
+      {
+        "type": "hemisphere",
+        "sky": "#bcd8ff",
+        "ground": "#5d4a36",
+        "intensity": 0.9
+      }
+    ],
+    "shadow": {
+      "opacity": 0.45,
+      "blur": 1.8
+    }
+  },
+  "neon": {
+    "description": "Magenta and cyan rim lights over a dark base. Night-mode friendly.",
+    "environment": "room",
+    "environmentIntensity": 0.2,
+    "exposure": 1.2,
+    "toneMapping": "aces",
+    "background": null,
+    "lights": [
+      {
+        "type": "point",
+        "color": "#ff2bd6",
+        "intensity": 30,
+        "position": [
+          -3,
+          1.5,
+          2
+        ]
+      },
+      {
+        "type": "point",
+        "color": "#2be8ff",
+        "intensity": 30,
+        "position": [
+          3,
+          1,
+          -2
+        ]
+      },
+      {
+        "type": "directional",
+        "color": "#ffffff",
+        "intensity": 0.3,
+        "position": [
+          0,
+          5,
+          3
+        ]
+      }
+    ],
+    "shadow": {
+      "opacity": 0.25,
+      "blur": 3
+    }
+  },
+  "flat": {
+    "description": "No environment reflections, even illumination. For stylized or unlit-looking models.",
+    "environment": null,
+    "environmentIntensity": 0,
+    "exposure": 1,
+    "toneMapping": "neutral",
+    "background": null,
+    "lights": [
+      {
+        "type": "ambient",
+        "color": "#ffffff",
+        "intensity": 2.2
+      },
+      {
+        "type": "directional",
+        "color": "#ffffff",
+        "intensity": 0.6,
+        "position": [
+          2,
+          4,
+          3
+        ]
+      }
+    ],
+    "shadow": null
+  }
+}

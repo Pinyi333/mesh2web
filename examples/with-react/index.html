@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · inside React</title>
+  <style>
+    body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #f2efe9; color: #161616; }
+    #root { max-width: 760px; margin: 0 auto; padding: 32px 16px; }
+    web-model { --web-model-accent: #161616; }
+    button { font: inherit; padding: 8px 14px; margin: 0 8px 16px 0; border-radius: 999px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  </style>
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+</head>
+<body>
+  <!--
+    <web-model> is a standard Custom Element, so it works in React, Vue, Svelte,
+    Astro… with no wrapper. This page uses React from a CDN without a build step
+    (no JSX) purely to prove the interop.
+  -->
+  <div id="root"></div>
+  <script type="module">
+    import React, { useEffect, useRef, useState } from 'https://esm.sh/react@19';
+    import { createRoot } from 'https://esm.sh/react-dom@19/client';
+    const h = React.createElement;
+
+    function Viewer({ lighting }) {
+      const ref = useRef(null);
+      const [status, setStatus] = useState('loading…');
+      useEffect(() => {
+        const el = ref.current;
+        // Custom events are attached with addEventListener (React 19 also supports onLoad-style props for custom elements).
+        const onLoad = (e) => setStatus(`loaded · quality ${e.detail.quality}`);
+        el.addEventListener('load', onLoad);
+        return () => el.removeEventListener('load', onLoad);
+      }, []);
+      return h('figure', { style: { margin: 0 } },
+        h('web-model', {
+          ref,
+          src: '../basic/models/sculpture.glb',
+          poster: '../basic/models/sculpture.webp',
+          alt: 'Ceramic sculpture rendered inside a React component',
+          lighting,
+          autorotate: '',
+        }),
+        h('figcaption', null, status));
+    }
+
+    function App() {
+      const [lighting, setLighting] = useState('studio-soft');
+      return h('main', null,
+        h('h1', null, '<web-model> in React'),
+        ['studio-soft', 'outdoor', 'neon'].map((name) => h('button', { key: name, onClick: () => setLighting(name), 'aria-pressed': lighting === name }, name)),
+        h(Viewer, { lighting }));
+    }
+
+    createRoot(document.getElementById('root')).render(h(App));
+  </script>
+</body>
+</html>

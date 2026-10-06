@@ -1,0 +1,26 @@
+{
+  "hero": {
+    "description": "Above-the-fold hero visual. Keeps detail, strict size budget for fast first paint.",
+    "simplify": { "ratio": 0.5, "error": 0.001 },
+    "geometry": "meshopt",
+    "textures": { "format": "webp", "maxSize": 2048, "quality": 85 },
+    "lod": [1, 0.5],
+    "budget": { "maxSizeKB": 2500, "maxTriangles": 150000 }
+  },
+  "product": {
+    "description": "Product viewer. Balanced detail and size, users can inspect closely.",
+    "simplify": { "ratio": 0.6, "error": 0.0005 },
+    "geometry": "meshopt",
+    "textures": { "format": "webp", "maxSize": 2048, "quality": 90 },
+    "lod": [1, 0.5, 0.2],
+    "budget": { "maxSizeKB": 1500, "maxTriangles": 80000 }
+  },
+  "ambient": {
+    "description": "Background or decorative model. Aggressive reduction, it is never the focus.",
+    "simplify": { "ratio": 0.2, "error": 0.01 },
+    "geometry": "meshopt",
+    "textures": { "format": "webp", "maxSize": 1024, "quality": 75 },
+    "lod": [1],
+    "budget": { "maxSizeKB": 600, "maxTriangles": 25000 }
+  }
+}

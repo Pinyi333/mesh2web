@@ -1,0 +1,50 @@
+{
+  "name": "@mesh2web/cli",
+  "version": "0.1.0",
+  "description": "CLI: optimize any 3D model into a lightweight, web-ready GLB with presets, budgets and reports.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "mesh2web": "./src/bin.js"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@mesh2web/core": "0.1.0",
+    "@mesh2web/presets": "0.1.0",
+    "chokidar": "^5.0.0",
+    "@mesh2web/element": "0.1.0"
+  },
+  "peerDependencies": {
+    "playwright-core": ">=1.40"
+  },
+  "peerDependenciesMeta": {
+    "playwright-core": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinyi333/mesh2web.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "pinyi333",
+  "homepage": "https://github.com/pinyi333/mesh2web#readme",
+  "bugs": {
+    "url": "https://github.com/pinyi333/mesh2web/issues"
+  },
+  "keywords": [
+    "3d",
+    "gltf",
+    "glb",
+    "three.js",
+    "web-component",
+    "optimization",
+    "meshopt",
+    "gsap"
+  ]
+}
