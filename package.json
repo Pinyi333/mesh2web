@@ -18,7 +18,8 @@
     "test:e2e": "node scripts/e2e.js",
     "assets": "node scripts/make-test-assets.js",
     "dev": "node scripts/build.js && node scripts/serve.js",
-    "lint": "node scripts/lint.js"
+    "lint": "node scripts/lint.js",
+    "media": "node scripts/readme-media.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
