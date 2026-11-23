@@ -21,3 +21,7 @@ First public version.
   `animation` and `exposure`, and an optional GSAP ScrollTrigger bridge.
 - **Studio**: in-browser optimization in a Web Worker, split before/after
   compare, zip export.
+- **Docs**: 30-second start, comparison table, CDN usage (jsDelivr / unpkg)
+  and integration guides for Three.js, Webflow, Framer and WordPress, in
+  English and Traditional Chinese. `npm run media` renders the README
+  before/after GIF and the social preview image.

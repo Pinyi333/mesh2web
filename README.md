@@ -1,23 +1,48 @@
 <p align="center">
-  <img src="apps/docs/models/sculpture.webp" width="420" alt="A ceramic sculpture with a gold ribbon, rendered by mesh2web">
+  <img src=".github/assets/before-after.gif" width="720" alt="The same 3D model before and after mesh2web: 34.01 MB and 348,288 triangles on the left, 556 KB and 77,600 triangles on the right, rotating side by side and looking the same">
 </p>
 
 <h1 align="center">mesh2web</h1>
 
-<p align="center"><strong>Turn any 3D model into a lightweight, beautiful, embeddable web component.</strong></p>
+<p align="center"><strong>Turn a 34 MB 3D model into a 556 KB web component you embed with one line of HTML.</strong></p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@mesh2web/cli"><img src="https://img.shields.io/npm/v/@mesh2web/cli?label=npm&color=d4ff3a&labelColor=0b0b0c" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@mesh2web/element"><img src="https://img.shields.io/npm/dm/@mesh2web/element?label=downloads&color=d4ff3a&labelColor=0b0b0c" alt="npm downloads per month"></a>
+  <a href="https://github.com/pinyi333/mesh2web/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/pinyi333/mesh2web/ci.yml?branch=main&label=CI&labelColor=0b0b0c" alt="CI status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-efebe3?labelColor=0b0b0c" alt="MIT license"></a>
+</p>
 
 <p align="center">
   <a href="https://pinyi333.github.io/mesh2web/">Website</a> ·
   <a href="https://pinyi333.github.io/mesh2web/studio/">Studio</a> ·
   <a href="#cli">CLI</a> ·
   <a href="#web-model">&lt;web-model&gt;</a> ·
+  <a href="docs/integrations.md">Integrations</a> ·
   <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
 ```
 34.0 MB → 556 KB   ·   348,288 → 77,600 triangles   ·   −98%   ·   2.9 s on slow 4G
 ```
-<sub>Measured on <code>test-assets/bad-knot.glb</code> (a deliberately messy export) with the <code>product</code> preset.</sub>
+<sub>Measured on <code>test-assets/bad-knot.glb</code> (a deliberately messy export) with the <code>product</code> preset. Everything runs locally: your models are never uploaded.</sub>
+
+## 30-second start
+
+**1. Optimize** (no install needed):
+
+```bash
+npx @mesh2web/cli optimize model.glb
+```
+
+**2. Embed** (one script tag, one element):
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
+<web-model src="model.glb" alt="Describe your model" autorotate></web-model>
+```
+
+That's it: poster-first lazy loading, adaptive quality and accessible defaults come built in. Prefer a GUI? Drop a file into [Studio](https://pinyi333.github.io/mesh2web/studio/).
 
 ---
 
@@ -31,7 +56,7 @@ Putting 3D on the web fails somewhere along a long chain: **export → optimize 
 | [`@mesh2web/presets`](packages/presets) | Optimization presets (`hero`, `product`, `ambient`) and lighting presets |
 | [Studio](apps/studio) | Drag-and-drop GUI. Runs entirely in your browser, so models are never uploaded |
 
-## Quick start
+## A full run
 
 ```bash
 npx @mesh2web/cli optimize robot.glb        # default preset: product
@@ -52,7 +77,7 @@ robot.glb … clean → normals → simplify → fit-budget → textures → lod
 Then paste the generated `robot.embed.html`:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
 
 <web-model
   src="/3d/robot.glb"
@@ -139,6 +164,15 @@ npm i @mesh2web/element
 import '@mesh2web/element'; // registers <web-model>
 ```
 
+Or straight from a CDN, no build step (pin the version you tested with):
+
+```html
+<!-- jsDelivr -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
+<!-- or unpkg -->
+<script type="module" src="https://unpkg.com/@mesh2web/element@0.1/dist/web-model.js"></script>
+```
+
 The element shell is **4 KB gzip**. three.js (≈170 KB gzip) loads as a separate chunk only when a model is about to be shown.
 
 | Attribute | Default | |
@@ -196,9 +230,11 @@ scrollModel(gsap, model, {
 });
 ```
 
-### Frameworks
+### Frameworks and site builders
 
 `<web-model>` is a standard Custom Element: it works in React, Vue, Svelte and Astro without a wrapper. See [`examples/with-react`](examples/with-react).
+
+Step-by-step guides for **Three.js**, **Webflow**, **Framer** and **WordPress** are in [docs/integrations.md](docs/integrations.md).
 
 ## Studio
 
@@ -222,15 +258,27 @@ npm run build      # bundle the element, Studio's worker core, docs vendor files
 npm test           # unit tests (vitest)
 npm run test:e2e   # headless Chromium smoke tests (needs a Chromium for playwright-core)
 npm run dev        # http://127.0.0.1:5173/apps/docs/
+npm run media      # re-render the README GIF and social preview (needs ffmpeg)
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues: new presets, translations, examples.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Looking for a place to start? Check the [`good first issue`](https://github.com/pinyi333/mesh2web/labels/good%20first%20issue) label.
 
 ## Compared to…
 
-- **glTF-Transform / gltfpack**: excellent, and mesh2web uses them underneath. mesh2web adds presets, budgets, reports, a GUI and the runtime.
-- **`<model-viewer>`**: great for product AR. mesh2web focuses on the optimization pipeline and on scroll and GSAP storytelling.
-- **Spline / Sketchfab embeds**: mesh2web takes their GLB exports and ships them without a heavy runtime, watermark or tracking.
+mesh2web is built on glTF-Transform and meshoptimizer, and sits next to `<model-viewer>` rather than replacing it.
+
+| | mesh2web | glTF-Transform / gltfpack | `<model-viewer>` |
+|---|---|---|---|
+| Simplify, compress, resize textures | ✅ with presets | ✅ low-level flags | — |
+| Size / triangle budgets that fail CI | ✅ exit code `2` | — | — |
+| Before/after report (HTML + JSON) | ✅ | stats only | — |
+| GUI that keeps models local | ✅ Studio | — | online editor |
+| Embeddable viewer element | ✅ `<web-model>` | — | ✅ |
+| Poster-first lazy loading, adaptive quality, LODs | ✅ | — | poster + lazy |
+| Camera as plain numbers for GSAP / scroll stories | ✅ | — | attribute strings |
+| AR (Scene Viewer, Quick Look) | roadmap | — | ✅ |
+
+**Pick mesh2web** when you want one tool from messy export to a fast, scroll-animated embed. **Pick `<model-viewer>`** when AR on phones is the main goal. **Use glTF-Transform directly** when you are writing your own pipeline.
 
 ## Roadmap
 

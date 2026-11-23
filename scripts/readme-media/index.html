@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · README media</title>
+  <!--
+    Composition used by scripts/readme-media.js to render the README GIF
+    (?mode=gif) and the GitHub social preview (?mode=social). Frames are driven
+    by window.__frame(t) so capture is deterministic; open it in a browser to
+    preview it live.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="../../node_modules/gsap/dist/gsap.min.js"></script>
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+</head>
+<body>
+  <main class="stage" data-stage>
+    <header class="brand">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">mesh2web</span>
+      <span class="brand__tag">CLI · Studio · &lt;web-model&gt;</span>
+    </header>
+
+    <h1 class="title" data-social>Any 3D model, <em>web-ready.</em></h1>
+
+    <section class="panes">
+      <figure class="pane pane--before">
+        <web-model data-model="before" lighting="studio-soft" controls="none" loading="eager" shadow alt="Original export"></web-model>
+        <figcaption>
+          <span class="pane__label">Original export</span>
+          <span class="pane__size" data-size-before>34.01 MB</span>
+          <span class="pane__meta">348,288 tris · 2 draw calls</span>
+        </figcaption>
+      </figure>
+
+      <div class="delta" aria-hidden="true">
+        <span class="delta__arrow"></span>
+        <span class="delta__value">−98%</span>
+      </div>
+
+      <figure class="pane pane--after">
+        <web-model data-model="after" lighting="studio-soft" controls="none" loading="eager" shadow alt="Optimized by mesh2web"></web-model>
+        <span class="scan" data-scan aria-hidden="true"></span>
+        <figcaption>
+          <span class="pane__label">mesh2web optimize</span>
+          <span class="pane__size pane__size--accent" data-size-after>556 KB</span>
+          <span class="pane__meta">77,600 tris · 1 draw call</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <footer class="cmd"><span class="cmd__prompt">$</span> npx @mesh2web/cli optimize model.glb</footer>
+  </main>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

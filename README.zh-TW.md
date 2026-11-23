@@ -1,23 +1,48 @@
 <p align="center">
-  <img src="apps/docs/models/sculpture.webp" width="420" alt="由 mesh2web 渲染的陶瓷雕塑與金色緞帶">
+  <img src=".github/assets/before-after.gif" width="720" alt="同一個 3D 模型在 mesh2web 處理前後並排旋轉：左邊 34.01 MB、348,288 面，右邊 556 KB、77,600 面，外觀幾乎相同">
 </p>
 
 <h1 align="center">mesh2web</h1>
 
-<p align="center"><strong>把任何 3D 模型，變成輕量、好看、可直接放上網頁的元件。</strong></p>
+<p align="center"><strong>把 34 MB 的 3D 模型變成 556 KB、一行 HTML 就能嵌入的網頁元件。</strong></p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@mesh2web/cli"><img src="https://img.shields.io/npm/v/@mesh2web/cli?label=npm&color=d4ff3a&labelColor=0b0b0c" alt="npm 版本"></a>
+  <a href="https://www.npmjs.com/package/@mesh2web/element"><img src="https://img.shields.io/npm/dm/@mesh2web/element?label=downloads&color=d4ff3a&labelColor=0b0b0c" alt="npm 每月下載數"></a>
+  <a href="https://github.com/pinyi333/mesh2web/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/pinyi333/mesh2web/ci.yml?branch=main&label=CI&labelColor=0b0b0c" alt="CI 狀態"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-efebe3?labelColor=0b0b0c" alt="MIT 授權"></a>
+</p>
 
 <p align="center">
   <a href="https://pinyi333.github.io/mesh2web/">官網</a> ·
   <a href="https://pinyi333.github.io/mesh2web/studio/">Studio</a> ·
   <a href="#cli">CLI</a> ·
   <a href="#web-model">&lt;web-model&gt;</a> ·
+  <a href="docs/integrations.zh-TW.md">整合範例</a> ·
   <a href="README.md">English</a>
 </p>
 
 ```
 34.0 MB → 556 KB   ·   348,288 → 77,600 面   ·   −98%   ·   慢速 4G 約 2.9 秒
 ```
-<sub>以 <code>test-assets/bad-knot.glb</code>（刻意做髒的匯出檔）搭配 <code>product</code> preset 實測。</sub>
+<sub>以 <code>test-assets/bad-knot.glb</code>（刻意做髒的匯出檔）搭配 <code>product</code> preset 實測。全部在本機處理，模型不會上傳。</sub>
+
+## 30 秒上手
+
+**1. 優化**（不用安裝）：
+
+```bash
+npx @mesh2web/cli optimize model.glb
+```
+
+**2. 嵌入**（一個 script、一個元素）：
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
+<web-model src="model.glb" alt="描述你的模型" autorotate></web-model>
+```
+
+這樣就完成了：poster 優先的延遲載入、自適應品質與無障礙預設都已內建。想用介面操作？把檔案拖進 [Studio](https://pinyi333.github.io/mesh2web/studio/) 即可。
 
 ---
 
@@ -31,7 +56,7 @@
 | [`@mesh2web/presets`](packages/presets) | 優化 preset（`hero`、`product`、`ambient`）與燈光 preset |
 | [Studio](apps/studio) | 拖曳即用的網頁 GUI，全部在瀏覽器本地處理，模型不會上傳 |
 
-## 快速開始
+## 完整流程
 
 ```bash
 npx @mesh2web/cli optimize robot.glb        # 預設 preset：product
@@ -40,7 +65,7 @@ npx @mesh2web/cli optimize robot.glb        # 預設 preset：product
 會產出 `robot.glb`、LOD 檔、`robot.report.html`（處理前後對照報告）和 `robot.embed.html`。把嵌入碼貼進網頁即可：
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
 
 <web-model
   src="/3d/robot.glb"
@@ -77,6 +102,19 @@ mesh2web build --watch           # 存檔就自動重建
 
 <h2 id="web-model">&lt;web-model&gt;</h2>
 
+```bash
+npm i @mesh2web/element
+```
+
+也可以直接從 CDN 載入，不需要打包工具（建議鎖定測試過的版本）：
+
+```html
+<!-- jsDelivr -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@mesh2web/element@0.1/dist/web-model.js"></script>
+<!-- 或 unpkg -->
+<script type="module" src="https://unpkg.com/@mesh2web/element@0.1/dist/web-model.js"></script>
+```
+
 元件本體只有 **4 KB gzip**。three.js（約 170 KB gzip）拆成獨立 chunk，只在模型即將出現時才載入。
 
 | 屬性 | 預設 | 說明 |
@@ -106,6 +144,10 @@ gsap.timeline({ scrollTrigger: { trigger: '#story', start: 'top top', end: '+=20
   .to(model, { exposure: 1.4 }, 0.5);
 ```
 
+### 框架與建站工具
+
+`<web-model>` 是標準 Custom Element，在 React、Vue、Svelte、Astro 裡不需包裝就能用，範例見 [`examples/with-react`](examples/with-react)。**Three.js**、**Webflow**、**Framer**、**WordPress** 的逐步教學請見 [docs/integrations.zh-TW.md](docs/integrations.zh-TW.md)。
+
 ## Studio
 
 打開 [Studio](https://pinyi333.github.io/mesh2web/studio/)，拖入 GLB、glTF（連同 .bin 與貼圖）或 OBJ。Studio 會做健檢，讓你選 preset 或用滑桿微調，並以同步相機的左右分割畫面比對處理前後。最後一鍵匯出 zip，內含 GLB、LOD、poster、嵌入碼和報告。所有處理都在你電腦上的 Web Worker 完成。
@@ -119,9 +161,27 @@ npm run build      # 打包元件、Studio 用的 core、文件站相依檔
 npm test           # 單元測試（vitest）
 npm run test:e2e   # 無頭 Chromium 冒煙測試
 npm run dev        # http://127.0.0.1:5173/apps/docs/
+npm run media      # 重新產生 README 動圖與社群預覽圖（需要 ffmpeg）
 ```
 
-歡迎貢獻，請見 [CONTRIBUTING.md](CONTRIBUTING.md)。新增 preset、翻譯、範例都是很好的入門題目。
+歡迎貢獻，請見 [CONTRIBUTING.md](CONTRIBUTING.md)。不知道從哪開始？可以看標記為 [`good first issue`](https://github.com/pinyi333/mesh2web/labels/good%20first%20issue) 的題目。
+
+## 與同類工具比較
+
+mesh2web 建立在 glTF-Transform 與 meshoptimizer 之上，和 `<model-viewer>` 是互補而非取代。
+
+| | mesh2web | glTF-Transform / gltfpack | `<model-viewer>` |
+|---|---|---|---|
+| 減面、壓縮、縮放貼圖 | ✅ 有 preset | ✅ 低階參數 | — |
+| 體積／面數預算，超標讓 CI 失敗 | ✅ 結束碼 `2` | — | — |
+| 處理前後報告（HTML + JSON） | ✅ | 僅統計 | — |
+| 模型不離開本機的圖形介面 | ✅ Studio | — | 線上編輯器 |
+| 可嵌入的檢視元件 | ✅ `<web-model>` | — | ✅ |
+| poster 優先延遲載入、自適應品質、LOD | ✅ | — | poster 與延遲載入 |
+| 相機參數是純數字，可直接給 GSAP／滾動敘事 | ✅ | — | 屬性字串 |
+| AR（Scene Viewer、Quick Look） | 規劃中 | — | ✅ |
+
+**選 mesh2web**：想用一套工具從髒的匯出檔一路做到快速、可滾動動畫的嵌入。**選 `<model-viewer>`**：手機 AR 是主要目標。**直接用 glTF-Transform**：你在寫自己的管線。
 
 ## 授權
 
