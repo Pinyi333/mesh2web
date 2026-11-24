@@ -101,6 +101,7 @@ mesh2web init                    # writes mesh2web.config.json
 mesh2web build                   # batch-process a folder (exit code 2 if over budget)
 mesh2web build --watch           # rebuild on save
 mesh2web presets                 # list presets
+mesh2web presets --json          # preset definitions for scripts
 ```
 
 | Flag | |

@@ -1,4 +1,5 @@
 import { describe, expect, it, beforeAll } from 'vitest';
+import { optimizePresets } from '@mesh2web/presets';
 import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -44,6 +45,20 @@ beforeAll(async () => {
 });
 
 describe('mesh2web CLI', () => {
+  it('prints optimization presets as a JSON object', async () => {
+    const { code, stdout, stderr } = await cli(['presets', '--json']);
+    expect(code).toBe(0);
+    expect(stderr).toBe('');
+    expect(JSON.parse(stdout)).toEqual(optimizePresets);
+  });
+
+  it('keeps the human-readable preset listing', async () => {
+    const { code, stdout, stderr } = await cli(['presets']);
+    expect(code).toBe(0);
+    expect(stderr).toBe('');
+    expect(stdout).toMatchSnapshot();
+  });
+
   it('prints help', async () => {
     const { code, stdout } = await cli(['--help']);
     expect(code).toBe(0);

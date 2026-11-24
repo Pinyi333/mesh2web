@@ -17,7 +17,7 @@ ${c.bold('Usage')}
   mesh2web optimize <model…> [flags]   Optimize to GLB + LODs + report + embed snippet
   mesh2web build    [--watch]          Batch-process using mesh2web.config.json
   mesh2web init                        Create a starter mesh2web.config.json
-  mesh2web presets                     List optimization presets
+  mesh2web presets [--json]            List optimization presets
 
 ${c.bold('Optimize flags')}
   -p, --preset <name>       hero | product | ambient          ${c.dim('(default: product)')}
@@ -75,6 +75,10 @@ async function main() {
     case 'build': return buildCommand(args, flags);
     case 'init': return initCommand();
     case 'presets':
+      if (flags.json) {
+        console.log(JSON.stringify(optimizePresets, null, 2));
+        return 0;
+      }
       for (const [name, p] of Object.entries(optimizePresets)) {
         console.log(`\n  ${c.bold(name.padEnd(9))}${p.description}`);
         console.log(`  ${' '.repeat(9)}${c.dim(`budget ${p.budget.maxSizeKB}KB / ${p.budget.maxTriangles.toLocaleString('en-US')} tris · textures ≤${p.textures.maxSize}px ${p.textures.format} · LOD ${p.lod.join(', ')}`)}`);
