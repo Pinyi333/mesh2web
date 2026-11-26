@@ -11,13 +11,13 @@
   <link rel="alternate" hreflang="en" href="https://pinyi333.github.io/mesh2web/?lang=en">
   <link rel="alternate" hreflang="zh-Hant" href="https://pinyi333.github.io/mesh2web/?lang=zh-TW">
   <link rel="alternate" hreflang="x-default" href="https://pinyi333.github.io/mesh2web/">
-  <meta name="theme-color" content="#0b0b0c">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 10v12L16 29 4 22V10z' fill='none' stroke='%23d4ff3a' stroke-width='2.5'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#d6d6d2">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 10v12L16 29 4 22V10z' fill='none' stroke='%238fe3ff' stroke-width='2.5'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="preload" as="image" href="models/sculpture.webp">
+  <link rel="preload" as="image" href="models/hero-ring.webp">
   <script>document.documentElement.classList.add('js');</script>
   <script src="vendor/i18n.js"></script>
   <script type="module" src="vendor/element/web-model.js"></script>
@@ -54,10 +54,35 @@
 
   <main id="main">
     <!-- ============================== HERO ============================== -->
-    <section class="hero" id="top">
+    <section class="hero panel" id="top">
+      <span class="hud-dot" aria-hidden="true"></span>
+      <div class="hero__stage" data-hero-model>
+        <!-- Rendered loop of a mesh2web-optimized model (120 KB GLB). Video keeps
+             the studio chrome reflections the real-time preview can't match yet. -->
+        <video class="hero__video" id="hero-video" muted loop playsinline preload="auto"
+          poster="models/hero-ring.webp" aria-hidden="true">
+          <source src="models/hero-ring.webm" type="video/webm">
+          <source src="models/hero-ring.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <h1 class="hero__title bracket">
+        <span class="hero__word" data-i18n="hero.titleA">(Any)&nbsp;3D&nbsp;model</span>
+        <span class="hero__word" data-i18n="hero.titleB">Web&#8209;ready</span>
+      </h1>
+
+      <aside class="hud hud--stats" data-hero-fade aria-label="Benchmark" data-i18n-attr="aria-label:hero.hudAria">
+        <p class="hud__label"><i class="hud__live" aria-hidden="true"></i><span data-i18n="hero.hudLabel">Optimized</span></p>
+        <p class="hud__value">34.0&nbsp;MB <span aria-hidden="true">→</span> 556&nbsp;KB</p>
+        <p class="hud__meta" data-i18n="hero.stats">This ring: 1.0 MB → 120 KB · 28.8k tris</p>
+      </aside>
+
+      <a class="orb" href="studio/" data-hero-fade data-magnetic>
+        <span data-i18n="hero.orb">Open<br>Studio</span>
+      </a>
+
       <div class="hero__copy">
         <p class="eyebrow" data-hero-fade data-i18n="hero.eyebrow">Open source · MIT · No framework required</p>
-        <h1 class="hero__title" data-i18n="hero.title">Any 3D model.<br><em>Web-ready</em> in<br>one command.</h1>
         <p class="hero__lead" data-hero-fade data-i18n="hero.lead">mesh2web inspects, cleans, simplifies and compresses your models, then ships them in a lightweight <code>&lt;web-model&gt;</code> element built for scroll stories and GSAP.</p>
         <div class="hero__actions" data-hero-fade>
           <button class="command" type="button" data-copy="npx @mesh2web/cli optimize model.glb" data-magnetic>
@@ -68,39 +93,27 @@
           <a class="link-arrow" href="studio/" data-i18n="hero.studio">Try Studio in your browser <span aria-hidden="true">→</span></a>
         </div>
       </div>
-      <div class="hero__stage" data-hero-model>
-        <web-model
-          id="hero-model"
-          src="models/sculpture.glb"
-          lod-src="models/sculpture.lod1.glb"
-          poster="models/sculpture.webp"
-          alt="A cream ceramic sculpture circled by a thin gold ribbon, slowly rotating"
-          data-i18n-attr="alt:hero.modelAlt"
-          lighting="studio-soft"
-          camera-orbit="-20 72 3.3"
-          autorotate
-          loading="eager"
-        >
-          <img src="models/sculpture.webp" alt="A cream ceramic sculpture circled by a thin gold ribbon" data-i18n-attr="alt:hero.posterAlt">
-        </web-model>
-        <p class="hero__caption" aria-hidden="true"><span data-i18n="hero.drag">Drag to rotate</span><span data-i18n="hero.stats">219 KB · 52k tris</span></p>
+
+      <div class="hero__bar" aria-hidden="true">
+        <span data-i18n="hero.loop">Chrome ring · 120 KB GLB</span>
+        <span class="hero__scroll"><i></i><b data-i18n="hero.scroll">Scroll</b></span>
+        <span>v0.1.0 — MIT</span>
       </div>
-      <div class="hero__scroll" aria-hidden="true"><span></span><b data-i18n="hero.scroll">Scroll</b></div>
     </section>
 
     <!-- ============================== MARQUEE ============================== -->
     <section class="marquee" aria-label="Benchmark highlights" data-i18n-attr="aria-label:marquee.aria">
       <div class="marquee__track" data-marquee>
-        <span>34.0 MB → 556 KB</span><i aria-hidden="true">✦</i>
-        <span data-i18n="marquee.tris">348k → 78k triangles</span><i aria-hidden="true">✦</i>
-        <span data-i18n="marquee.load">2.9 s on slow 4G</span><i aria-hidden="true">✦</i>
-        <span data-i18n="marquee.shell">4 KB element shell</span><i aria-hidden="true">✦</i>
+        <span>34.0 MB → 556 KB</span><i aria-hidden="true"></i>
+        <span data-i18n="marquee.tris">348k → 78k triangles</span><i aria-hidden="true"></i>
+        <span data-i18n="marquee.load">2.9 s on slow 4G</span><i aria-hidden="true"></i>
+        <span data-i18n="marquee.shell">4 KB element shell</span><i aria-hidden="true"></i>
       </div>
     </section>
 
     <!-- ============================== PIPELINE STORY (pinned) ============================== -->
     <section class="story" id="pipeline" aria-labelledby="story-title">
-      <div class="story__pin">
+      <div class="story__pin panel">
         <div class="story__model">
           <web-model
             id="story-model"
@@ -114,8 +127,9 @@
             camera-orbit="0 80 3.7"
             loading="lazy"
           ></web-model>
-          <div class="story__meter" aria-hidden="true">
-            <span class="story__meter-label" data-i18n="story.meter">File size</span>
+          <span class="crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <div class="story__meter hud" aria-hidden="true">
+            <span class="story__meter-label"><i class="hud__live"></i><span data-i18n="story.meter">File size</span></span>
             <span class="story__meter-value" data-meter>34.0 MB</span>
             <span class="story__meter-bar"><span data-meter-bar></span></span>
           </div>
@@ -156,37 +170,38 @@
     <!-- ============================== FEATURES ============================== -->
     <section class="features" id="element" aria-labelledby="features-title">
       <header class="section-head">
+        <div class="mega" aria-hidden="true"><span class="mega__word" data-i18n="features.mega">Element</span><span class="mega__orbs"><i></i><i></i></span></div>
         <p class="eyebrow" data-reveal data-i18n="features.eyebrow">The &lt;web-model&gt; element</p>
         <h2 id="features-title" class="section-title" data-split data-i18n="features.title">Declarative HTML for 90% of cases. A JS API for the rest.</h2>
       </header>
       <ul class="features__grid">
         <li class="feature" data-reveal>
-          <span class="feature__num">A</span>
+          <span class="feature__num">[ 01 ]</span>
           <h3 data-i18n="features.poster.title">Poster first</h3>
           <p data-i18n="features.poster.body">A poster fills the reserved box immediately, so LCP is unaffected and nothing shifts. The model fades in when it's ready.</p>
         </li>
         <li class="feature" data-reveal>
-          <span class="feature__num">B</span>
+          <span class="feature__num">[ 02 ]</span>
           <h3 data-i18n="features.adaptive.title">Adaptive quality</h3>
           <p data-i18n="features.adaptive.body">Picks a LOD and pixel ratio from GPU, memory and screen, and steps down automatically if frame rate drops.</p>
         </li>
         <li class="feature" data-reveal>
-          <span class="feature__num">C</span>
+          <span class="feature__num">[ 03 ]</span>
           <h3 data-i18n="features.idle.title">Zero idle cost</h3>
           <p data-i18n="features.idle.body">Renders on demand only. Pauses off-screen and in hidden tabs. three.js loads lazily as a separate chunk.</p>
         </li>
         <li class="feature" data-reveal>
-          <span class="feature__num">D</span>
+          <span class="feature__num">[ 04 ]</span>
           <h3 data-i18n="features.gestures.title">Page-first gestures</h3>
           <p data-i18n="features.gestures.body">One finger scrolls the page, a horizontal swipe or two fingers rotate the model. Wheel zoom needs Ctrl/⌘.</p>
         </li>
         <li class="feature" data-reveal>
-          <span class="feature__num">E</span>
+          <span class="feature__num">[ 05 ]</span>
           <h3 data-i18n="features.lighting.title">Tuned lighting</h3>
           <p data-i18n="features.lighting.body">Five presets with environment, tone mapping and a soft contact shadow, so models never look flat or grey.</p>
         </li>
         <li class="feature" data-reveal>
-          <span class="feature__num">F</span>
+          <span class="feature__num">[ 06 ]</span>
           <h3 data-i18n="features.a11y.title">Accessible</h3>
           <p data-i18n="features.a11y.body">Uses <code>role="img"</code> and an ARIA label, rotates with the arrow keys, and honors <code>prefers-reduced-motion</code>. Falls back to the poster without WebGL.</p>
         </li>
@@ -207,7 +222,8 @@
         </div>
         <pre class="code code--inline" data-reveal><code>&lt;web-model src="sculpture.glb" lighting="<span class="hl" data-lighting-label>studio-soft</span>"&gt;</code></pre>
       </div>
-      <div class="lab__stage" data-reveal>
+      <div class="lab__stage panel" data-reveal>
+        <span class="crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
         <web-model
           id="lab-model"
           src="models/sculpture.glb"
@@ -278,20 +294,31 @@ gsap.timeline({
         <h2 id="packages-title" class="section-title" data-split data-i18n="packages.title">Use the whole chain, or just the link you need.</h2>
       </header>
       <ul class="pkg-list">
-        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/cli"><span class="pkg__name">@mesh2web/cli</span><span class="pkg__desc" data-i18n="packages.cli">inspect · optimize · build --watch · CI budgets</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
-        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/element"><span class="pkg__name">@mesh2web/element</span><span class="pkg__desc" data-i18n="packages.element">&lt;web-model&gt; Web Component + GSAP bridge</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
-        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/core"><span class="pkg__name">@mesh2web/core</span><span class="pkg__desc" data-i18n="packages.core">Pipeline for Node and browsers, built on glTF-Transform</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
-        <li class="pkg" data-reveal><a href="studio/"><span class="pkg__name">mesh2web Studio</span><span class="pkg__desc" data-i18n="packages.studio">Drag and drop. Your model never leaves the browser.</span><span class="pkg__arrow" aria-hidden="true">→</span></a></li>
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/cli"><span class="pkg__box" aria-hidden="true"></span><span class="pkg__name">@mesh2web/cli</span><span class="pkg__desc" data-i18n="packages.cli">inspect · optimize · build --watch · CI budgets</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/element"><span class="pkg__box" aria-hidden="true"></span><span class="pkg__name">@mesh2web/element</span><span class="pkg__desc" data-i18n="packages.element">&lt;web-model&gt; Web Component + GSAP bridge</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="https://www.npmjs.com/package/@mesh2web/core"><span class="pkg__box" aria-hidden="true"></span><span class="pkg__name">@mesh2web/core</span><span class="pkg__desc" data-i18n="packages.core">Pipeline for Node and browsers, built on glTF-Transform</span><span class="pkg__arrow" aria-hidden="true">↗</span></a></li>
+        <li class="pkg" data-reveal><a href="studio/"><span class="pkg__box" aria-hidden="true"></span><span class="pkg__name">mesh2web Studio</span><span class="pkg__desc" data-i18n="packages.studio">Drag and drop. Your model never leaves the browser.</span><span class="pkg__arrow" aria-hidden="true">→</span></a></li>
       </ul>
     </section>
   </main>
 
-  <footer class="footer">
-    <p class="footer__big" aria-hidden="true">mesh2web</p>
-    <div class="footer__row">
-      <p data-i18n="footer.license">MIT licensed. Built on three.js, glTF-Transform and meshoptimizer.</p>
-      <p><a href="https://github.com/pinyi333/mesh2web">GitHub</a> · <a href="https://github.com/pinyi333/mesh2web#readme" data-i18n-attr="href:footer.readmeHref">README</a> · <a href="studio/">Studio</a></p>
+  <footer class="footer panel">
+    <div class="footer__top">
+      <span class="footer__mark" aria-hidden="true"></span>
+      <ul class="footer__links">
+        <li><a href="#pipeline" data-i18n="nav.pipeline">Pipeline</a></li>
+        <li><a href="#element" data-i18n="nav.element">Element</a></li>
+        <li><a href="#usage" data-i18n="nav.usage">Usage</a></li>
+        <li><a href="studio/">Studio</a></li>
+      </ul>
+      <ul class="footer__links">
+        <li><a href="https://github.com/pinyi333/mesh2web">GitHub ↗</a></li>
+        <li><a href="https://github.com/pinyi333/mesh2web#readme" data-i18n-attr="href:footer.readmeHref">README ↗</a></li>
+        <li><a href="https://www.npmjs.com/org/mesh2web">npm ↗</a></li>
+      </ul>
+      <p class="footer__license" data-i18n="footer.license">MIT licensed. Built on three.js, glTF-Transform and meshoptimizer.</p>
     </div>
+    <p class="footer__big" aria-hidden="true"><span>MESH</span><span>2WEB</span></p>
   </footer>
 
   <script src="js/lang.js"></script>
