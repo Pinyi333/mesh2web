@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mesh2web CLI > keeps the human-readable preset listing 1`] = `
+"
+  hero     Above-the-fold hero visual. Keeps detail, strict size budget for fast first paint.
+           budget 2500KB / 150,000 tris · textures ≤2048px webp · LOD 1, 0.5
+
+  product  Product viewer. Balanced detail and size, users can inspect closely.
+           budget 1500KB / 80,000 tris · textures ≤2048px webp · LOD 1, 0.5, 0.2
+
+  ambient  Background or decorative model. Aggressive reduction, it is never the focus.
+           budget 600KB / 25,000 tris · textures ≤1024px webp · LOD 1
+
+"
+`;
