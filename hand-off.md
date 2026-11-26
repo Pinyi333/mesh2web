@@ -37,11 +37,27 @@ mesh2web：把 3D 模型（GLB／glTF／OBJ）優化成輕量、可一行 HTML �
 - 前次失敗原因：部署當時 Pages 尚未啟用，`deploy-pages` 回 404。
 - 附帶發現：Actions 警告 `actions/checkout@v4`、`setup-node@v4`、`upload-artifact@v4` 目標是 Node 20（已淘汰，被強制改用 Node 24），之後可升級 action 版本。
 
+### 2026-11-26 升級 GitHub Actions 版本（Node 20 淘汰）✅ 完成
+
+- 檔案：`.github/workflows/ci.yml`、`pages.yml`、`release.yml`
+- 原因：部署時 Actions 警告 `checkout@v4`、`setup-node@v4`、`upload-artifact@v4` 目標為已淘汰的 Node 20。
+- 改動（只換版本，workflow 邏輯不動）：
+  - `actions/checkout` v4 → v7（node24）
+  - `actions/setup-node` v4 → v7（node24）
+  - `actions/upload-pages-artifact` v3 → v5（內部改用 upload-artifact v7）
+  - `actions/deploy-pages` v4 → v5（node24）
+- 檢查過的破壞性變更：
+  - upload-pages-artifact v4 起預設不打包 dotfile → `site/` 沒有 dotfile，不受影響。
+  - setup-node v6 起自動快取只限 npm、v7 不再預先設定 `NODE_AUTH_TOKEN` → 本專案本來就用 npm 並明寫 `cache: npm`；`release.yml` 的 publish 步驟自己設了 `NODE_AUTH_TOKEN`，不受影響。
+  - checkout v7 會擋 `pull_request_target`／`workflow_run` 簽出 fork PR → 本專案沒用這兩種觸發。
+- 驗證：本機 lint、build、`npm test` 21/21、e2e 3/3 通過；CLI 超出預算 exit 2、預算內 exit 0。新版 workflow 要推上 GitHub 才會實際執行，推送後要看 CI 與 Deploy site 是否綠燈。
+- 踩雷：跑過 `npm run build:site` 後 lint 會連 `site/` 一起掃（39 → 1790 檔），仍通過；`site/` 已在 gitignore。
+
 ## 待辦事項清單
 
 - [x] GitHub 分支整理：原本預設分支是 `claude/adoring-mccarthy-r0tb2q`（見 PR #1 Heads-up），使用者已刪除並改用 `main` 為預設，2026-11-26 查證完成。已合併的 `claude/project-thread-gpwqcr` 還留在遠端，要不要刪由使用者決定。
 - [x] 官網部署：2026-11-26 重跑成功，官網與 Studio 都能開。
-- [ ] 升級 workflow 裡 Node 20 的 actions（checkout／setup-node／upload-artifact），消除淘汰警告。
+- [x] 升級 workflow 裡 Node 20 的 actions（2026-11-26 完成，待推送後確認 CI／部署綠燈）。
 - [ ] README 持續打磨（中英同步）。
 
 ## 交接注意事項
