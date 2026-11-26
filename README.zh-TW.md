@@ -101,6 +101,7 @@ mesh2web init                    # 建立 mesh2web.config.json
 mesh2web build                   # 批次處理整個資料夾（超過預算時結束碼為 2）
 mesh2web build --watch           # 存檔就自動重建
 mesh2web presets                 # 列出所有 preset
+mesh2web presets --json          # 以 JSON 輸出完整 preset 定義，方便給腳本使用
 ```
 
 | 參數 | |

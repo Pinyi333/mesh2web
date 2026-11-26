@@ -53,12 +53,18 @@ mesh2web：把 3D 模型（GLB／glTF／OBJ）優化成輕量、可一行 HTML �
 - 驗證：本機 lint、build、`npm test` 21/21、e2e 3/3 通過；CLI 超出預算 exit 2、預算內 exit 0。新版 workflow 要推上 GitHub 才會實際執行，推送後要看 CI 與 Deploy site 是否綠燈。
 - 踩雷：跑過 `npm run build:site` 後 lint 會連 `site/` 一起掃（39 → 1790 檔），仍通過；`site/` 已在 gitignore。
 
+### 2026-11-26 合併 PR #10、#11 並同步中文 README 🔄 進行中
+
+- PR #10（snehaapratap，`presets --json`，關閉 #8）：CI 3/3、單元測試 23/23 通過，已用 merge commit 合併（cea8c8e）。
+- 接著在 `README.zh-TW.md` 的 CLI 區塊補 `mesh2web presets --json` 一行（對應 #10 在 `README.md` 的改動），推到 PR #11，CI 通過後合併 #11，再確認官網部署。
+
 ## 待辦事項清單
 
 - [x] GitHub 分支整理：原本預設分支是 `claude/adoring-mccarthy-r0tb2q`（見 PR #1 Heads-up），使用者已刪除並改用 `main` 為預設，2026-11-26 查證完成。已合併的 `claude/project-thread-gpwqcr` 還留在遠端，要不要刪由使用者決定。
 - [x] 官網部署：2026-11-26 重跑成功，官網與 Studio 都能開。
 - [x] 升級 workflow 裡 Node 20 的 actions（2026-11-26 完成，待推送後確認 CI／部署綠燈）。
 - [ ] README 持續打磨（中英同步）。
+- [ ] PR #10（外部貢獻者 snehaapratap，`presets --json`）：2026-11-26 已留審查留言。待使用者在 GitHub 按「Approve and run workflows」，CI 綠燈後合併；合併後在 `README.zh-TW.md` 的 CLI 區塊補 `mesh2web presets --json` 一行（留言中已答應作者由我們補）。
 
 ## 交接注意事項
 
