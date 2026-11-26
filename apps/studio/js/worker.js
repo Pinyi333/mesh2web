@@ -12,7 +12,7 @@
  */
 import {
   Document, Logger, createWebIO, inspectDocument, objToDocument, optimizeWithLods, resolveOptions,
-  createReport, renderHtmlReport, createEmbedSnippet, canvasTextureTransform,
+  createReport, renderHtmlReport, createEmbedSnippet, canvasTextureTransform, canvasKtx2Transform,
   MeshoptEncoder, MeshoptSimplifier,
 } from '../vendor/core.js';
 
@@ -92,6 +92,8 @@ async function optimize(id, options, meta = {}) {
     simplifier: MeshoptSimplifier,
     encoder: MeshoptEncoder,
     textureTransform: canvasTextureTransform,
+    // Basis Universal encoder WASM, copied next to core.js by scripts/build.js.
+    ktx2Transform: (t) => canvasKtx2Transform(t, { wasmUrl: new URL('../vendor/basis_encoder.wasm', import.meta.url).href }),
     onStep: (step) => post({ id, type: 'step', step }),
   });
 

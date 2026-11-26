@@ -26,7 +26,7 @@ export function printStats(stats) {
     ['Draw calls', num(stats.drawCalls)],
     ['Meshes / nodes', `${stats.meshes} / ${stats.nodes}`],
     ['Materials', num(stats.materials)],
-    ['Textures', `${stats.textures.length} (${formatBytes(stats.textureBytes)})`],
+    ['Textures', `${stats.textures.length} (${formatBytes(stats.textureBytes)} file · ~${formatBytes(stats.textureGpuBytes ?? 0)} GPU)`],
     ['Animations', num(stats.animations)],
     ['Bounds (m)', stats.bounds.size.map((v) => v.toFixed(2)).join(' × ')],
   ];
@@ -56,11 +56,14 @@ export function printReport(report) {
   console.log(`  ${c.dim('Size'.padEnd(12))}${formatBytes(before.bytes)} → ${c.bold(c.lime(formatBytes(after.bytes)))}  ${c.dim(`-${pct(reduction.bytes)}`)}`);
   console.log(`  ${c.dim('Triangles'.padEnd(12))}${num(before.stats.triangles)} → ${c.bold(num(after.stats.triangles))}  ${c.dim(`-${pct(reduction.triangles)}`)}`);
   console.log(`  ${c.dim('Draw calls'.padEnd(12))}${before.stats.drawCalls} → ${c.bold(after.stats.drawCalls)}`);
+  if (before.stats.textures.length) {
+    console.log(`  ${c.dim('GPU memory'.padEnd(12))}${formatBytes(before.stats.textureGpuBytes ?? 0)} → ${c.bold(formatBytes(after.stats.textureGpuBytes ?? 0))} ${c.dim('textures')}`);
+  }
   console.log(`  ${c.dim('Load time'.padEnd(12))}${formatMs(report.loadTimeMs['slow-4g'])} slow 4G · ${formatMs(report.loadTimeMs['fast-4g'])} fast 4G`);
   for (const o of report.outputs) console.log(`  ${c.dim('→')} ${o.file} ${c.dim(`${formatBytes(o.bytes)} · ${num(o.triangles)} tris`)}`);
   if (!report.budget.ok) {
     for (const v of report.budget.violations) {
-      const fmt = v.metric === 'size' ? formatBytes : num;
+      const fmt = v.metric === 'triangles' ? num : formatBytes;
       console.log(`  ${c.red('✗ Over budget:')} ${v.metric} ${fmt(v.actual)} > ${fmt(v.limit)}`);
     }
   } else {

@@ -9,12 +9,13 @@ export const CONFIG_FILE = 'mesh2web.config.json';
  * @property {string} output       Directory for optimized output.
  * @property {string} [preset]
  * @property {string} [publicPath] URL prefix used in embed snippets.
- * @property {{ maxSizeKB?: number, maxTriangles?: number }} [budget]
- * @property {{ format?: string, maxSize?: number, quality?: number } | false} [textures]
+ * @property {{ maxSizeKB?: number, maxTriangles?: number, maxTextureMemoryMB?: number }} [budget]
+ * @property {{ format?: 'webp' | 'jpeg' | 'png' | 'ktx2' | 'keep', maxSize?: number, quality?: number, mode?: 'auto' | 'etc1s' | 'uastc' } | false} [textures]
  * @property {{ ratio?: number, error?: number } | false} [simplify]
  * @property {'meshopt' | 'draco' | 'none'} [geometry]
  * @property {number[]} [lod]
  * @property {{ width?: number, format?: 'webp' | 'png' } | false} [poster]
+ * @property {boolean} [ar]  Write AR variants (`.ar.glb`, `.usdz`) and add the AR button.
  * @property {Record<string, Partial<Mesh2WebConfig>>} [overrides]  Per-file overrides keyed by file name.
  */
 

@@ -13,7 +13,12 @@ Installing it (`npm i -D @mesh2web/cli`) provides the `mesh2web` command.
 Run `mesh2web --help` for all flags. Over-budget models exit with code `2`,
 so you can block oversized assets in CI.
 
-Posters (`--poster`) need the optional peer `playwright-core` and a Chromium
+`--texture-format ktx2` keeps textures compressed on the GPU (~4× less video
+memory) and `--max-texture-memory <MB>` turns that into a CI budget. `--ar`
+also writes `name.ar.glb` (Android Scene Viewer) and `name.usdz` (iOS AR Quick
+Look) and adds `ar` to the embed snippet.
+
+Posters (`--poster`) and USDZ (`--ar`) need the optional peer `playwright-core` and a Chromium
 (`npx playwright-core install chromium`, or set `MESH2WEB_CHROMIUM`).
 
 MIT

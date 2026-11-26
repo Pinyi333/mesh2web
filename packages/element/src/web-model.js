@@ -1,6 +1,7 @@
 import { OrbitState } from './controls.js';
 import { detectTier, hasWebGL, pickSource } from './quality.js';
 import { styles } from './styles.js';
+import { detectARMode, openQuickLook, sceneViewerIntent } from './ar.js';
 
 /**
  * @typedef {'lazy' | 'eager' | 'interaction'} LoadingStrategy
@@ -66,7 +67,7 @@ class AnimationController {
 export class WebModel extends HTMLElement {
   static get observedAttributes() {
     return ['src', 'lod-src', 'poster', 'alt', 'lighting', 'controls', 'autorotate', 'autorotate-speed',
-      'gesture', 'camera-orbit', 'exposure', 'shadow', 'disable-zoom', 'loading'];
+      'gesture', 'camera-orbit', 'exposure', 'shadow', 'disable-zoom', 'loading', 'ar', 'ios-src'];
   }
 
   constructor() {
@@ -92,6 +93,9 @@ export class WebModel extends HTMLElement {
         <button class="prompt" part="prompt" type="button" hidden>
           <span class="prompt__icon" aria-hidden="true"></span><span class="prompt__label">View in 3D</span>
         </button>
+        <button class="ar" part="ar-button" type="button" aria-label="View in your space (AR)" hidden>
+          <slot name="ar-button"><span class="ar__icon" aria-hidden="true"></span><span class="ar__label">View in your space</span></slot>
+        </button>
         <div class="progress" part="progress" aria-hidden="true"><span></span></div>
         <div class="fallback"><slot></slot></div>
       </div>`;
@@ -99,7 +103,11 @@ export class WebModel extends HTMLElement {
     this.$canvas = root.querySelector('canvas');
     this.$prompt = root.querySelector('.prompt');
     this.$progress = root.querySelector('.progress span');
+    this.$ar = root.querySelector('.ar');
     this.$prompt.addEventListener('click', (e) => { e.stopPropagation(); this.load(); });
+    this.$ar.addEventListener('click', (e) => { e.stopPropagation(); this.activateAR(); });
+    // Keep pointer input on the button from starting an orbit drag.
+    this.$ar.addEventListener('pointerdown', (e) => e.stopPropagation());
     this._onMotionChange = () => this._applyAutorotate();
   }
 
@@ -115,6 +123,7 @@ export class WebModel extends HTMLElement {
     if (!this.hasAttribute('tabindex') && this.getAttribute('controls') !== 'none') this.tabIndex = 0;
     this._syncAlt();
     this._syncPoster();
+    this._syncAR();
     reducedMotionQuery?.addEventListener?.('change', this._onMotionChange);
     this._scheduleLoad();
   }
@@ -130,6 +139,7 @@ export class WebModel extends HTMLElement {
     this.loaded = false;
     this._loading = null;
     this.removeAttribute('data-state');
+    if (this._usdz) { URL.revokeObjectURL(this._usdz.url); this._usdz = null; }
     this._resetReady();
   }
 
@@ -139,6 +149,8 @@ export class WebModel extends HTMLElement {
       case 'alt': this._syncAlt(); break;
       case 'poster': this._syncPoster(); break;
       case 'src':
+        this._syncAR();
+        // falls through
       case 'lod-src':
         if (this.viewer) this._loadModel().catch((error) => this._fail(error));
         else if (this.isConnected && !this._loading) this._scheduleLoad();
@@ -153,6 +165,8 @@ export class WebModel extends HTMLElement {
       case 'exposure': if (value != null) this.exposure = parseFloat(value); break;
       case 'shadow': if (this.viewer) { this.viewer.shadowEnabled = value !== 'none'; this.viewer.updateShadow(); this.invalidate(); } break;
       case 'loading': if (this.isConnected && !this.loaded) this._scheduleLoad(); break;
+      case 'ar':
+      case 'ios-src': this._syncAR(); break;
       default: break;
     }
   }
@@ -211,6 +225,67 @@ export class WebModel extends HTMLElement {
     if (!this.viewer) return Promise.resolve(null);
     this.viewer.renderOnce();
     return new Promise((resolve) => this.$canvas.toBlob(resolve, type, quality));
+  }
+
+  // ---- AR ----------------------------------------------------------------
+
+  /** `quick-look` (iOS), `scene-viewer` (Android) or null when AR is unavailable. */
+  get arMode() { return WebModel.detectARMode(); }
+
+  /** True when the `ar` attribute is set and this device can open an AR viewer. */
+  get canActivateAR() { return this.hasAttribute('ar') && !!this.arMode && !!this.src; }
+
+  /**
+   * Place the model in the room with the platform AR viewer. Must be called
+   * from a user gesture (a click), like the built-in AR button does.
+   * Fires a cancelable `ar-status` event with `{ status, mode, url }`; call
+   * `preventDefault()` on `session-started` to open `url` yourself.
+   */
+  async activateAR() {
+    const mode = this.arMode;
+    const status = (detail) => this.dispatchEvent(new CustomEvent('ar-status', { detail: { mode, ...detail }, cancelable: true }));
+    try {
+      if (!mode) throw new Error('AR is not available on this device');
+      const placement = this.getAttribute('ar-placement') || 'floor';
+      const scale = this.getAttribute('ar-scale') || 'auto';
+      if (mode === 'scene-viewer') {
+        // Scene Viewer downloads the model itself, so it needs an absolute URL.
+        const model = new URL(this.getAttribute('ar-src') || this.src, location.href).href;
+        const url = sceneViewerIntent(model, { title: this.alt, placement, scale, fallbackUrl: location.href.split('#')[0] });
+        if (status({ status: 'session-started', url })) location.assign(url);
+        return;
+      }
+      const url = await this._usdzUrl();
+      if (status({ status: 'session-started', url })) openQuickLook(url, { scale });
+    } catch (error) {
+      status({ status: 'failed', error });
+    }
+  }
+
+  /**
+   * The loaded model as a USDZ Blob (three.js USDZExporter), the same file
+   * iOS Quick Look receives when no `ios-src` is given.
+   * @returns {Promise<Blob>}
+   */
+  async exportUSDZ() {
+    await this.load();
+    await this.ready;
+    return this.viewer.exportUSDZ();
+  }
+
+  async _usdzUrl() {
+    const iosSrc = this.getAttribute('ios-src');
+    if (iosSrc) return new URL(iosSrc, location.href).href;
+    // Build once per model and reuse; generation takes a moment on big models.
+    if (this._usdz?.src !== this.src) {
+      if (this._usdz) URL.revokeObjectURL(this._usdz.url);
+      this._usdz = { src: this.src, url: URL.createObjectURL(await this.exportUSDZ()) };
+    }
+    return this._usdz.url;
+  }
+
+  _syncAR() {
+    this.$ar.hidden = !this.canActivateAR;
   }
 
   /** Start loading now, regardless of the `loading` strategy. */
@@ -305,6 +380,7 @@ export class WebModel extends HTMLElement {
     this.$progress.style.transform = 'scaleX(0)';
     const gltf = await viewer.load(url, {
       dracoDecoderPath: this.getAttribute('draco-decoder-path') || undefined,
+      ktx2TranscoderPath: this.getAttribute('ktx2-transcoder-path') || WebModel.ktx2TranscoderPath || undefined,
       onProgress: (p) => {
         this.$progress.style.transform = `scaleX(${p})`;
         this.dispatchEvent(new CustomEvent('progress', { detail: { progress: p } }));
@@ -354,6 +430,11 @@ export class WebModel extends HTMLElement {
     if (Number.isFinite(distance)) this.camera.distance = distance;
   }
 }
+
+/** Device detection hook (overridable in tests). */
+WebModel.detectARMode = () => detectARMode();
+/** Default KTX2 transcoder folder for every element (the attribute wins). */
+WebModel.ktx2TranscoderPath = '';
 
 /** Register `<web-model>` (or a custom tag name). Safe to call twice. */
 export function define(tagName = 'web-model') {

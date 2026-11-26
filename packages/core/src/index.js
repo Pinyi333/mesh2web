@@ -10,4 +10,5 @@ export {
 } from './report.js';
 export { objToDocument } from './obj.js';
 export { createEmbedSnippet } from './embed.js';
+export { ktx2Textures, ktx2Settings, ktx2Size, estimateGpuBytes, textureSlots } from './ktx2.js';
 export { optimizePresets, lightingPresets } from '@mesh2web/presets';

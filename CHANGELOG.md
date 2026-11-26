@@ -7,6 +7,17 @@ All notable changes are documented here. This project follows
 
 First public version.
 
+- **KTX2 textures**: `--texture-format ktx2` (and `textures.format: "ktx2"`)
+  encodes textures with Basis Universal in Node and in the browser (ETC1S for
+  color, UASTC for normal maps, `--texture-mode` to force one). Reports and
+  `inspect` show texture GPU memory; `--max-texture-memory` /
+  `budget.maxTextureMemoryMB` fails CI with exit code 2. `<web-model>` loads
+  the KTX2 transcoder only for models that use it (`ktx2-transcoder-path`).
+- **AR**: `<web-model ar>` opens Android Scene Viewer or iOS AR Quick Look
+  (`ar-src`, `ios-src`, `ar-placement`, `ar-scale`, `activateAR()`,
+  `exportUSDZ()`, `ar-status` event). `mesh2web optimize --ar` / `"ar": true`
+  writes `name.ar.glb` (Draco + PNG/JPEG) and `name.usdz`.
+
 - **@mesh2web/core**: inspect (health check with fixes), clean (dedup, flatten,
   weld, smooth normals, join, prune), meshoptimizer simplification with
   budget fitting, WebP texture resize, LOD generation, Meshopt/Draco

@@ -110,15 +110,17 @@ mesh2web presets --json          # 以 JSON 輸出完整 preset 定義，方便�
 | `-o, --out` | 輸出資料夾 |
 | `--geometry` | `meshopt`（預設）· `draco` · `none` |
 | `--ratio` / `--no-simplify` | 減面目標比例（0–1）／不減面 |
-| `--texture-size` / `--texture-format` | 例如 `1024`；`webp` · `jpeg` · `png` · `keep` |
+| `--texture-size` / `--texture-format` | 例如 `1024`；`webp` · `jpeg` · `png` · `ktx2` · `keep` |
+| `--texture-mode` | 只用於 KTX2：`auto`（預設：顏色貼圖用 ETC1S、法線貼圖用 UASTC）· `etc1s` · `uastc` |
 | `--no-lod` | 不產生 LOD 檔 |
-| `--max-size` / `--max-triangles` | 預算。超出時結束碼為 `2` |
+| `--max-size` / `--max-triangles` / `--max-texture-memory` | 預算（KB、面數、貼圖 GPU 記憶體 MB）。超出時結束碼為 `2` |
 | `--no-fit` | 超出面數預算時，不自動再減面 |
+| `--ar` | 另外輸出給 Android Scene Viewer 的 `name.ar.glb`、給 iOS Quick Look 的 `name.usdz`（需要 `playwright-core`），並在嵌入碼加上 `ar` |
 | `--poster` | 用無頭 Chromium 輸出 `<name>.webp`（需要 `playwright-core`） |
 | `--public-path` | 嵌入碼裡使用的網址前綴 |
 | `--json` | 輸出機器可讀的 JSON |
 
-**輸出檔**：`name.glb`、`name.lodN.glb`、`name.report.json`、`name.report.html`（單檔、可直接開的處理前後報告）、`name.embed.html`，加上 `--poster` 時還有 `name.webp`。
+**輸出檔**：`name.glb`、`name.lodN.glb`、`name.report.json`、`name.report.html`（單檔、可直接開的處理前後報告）、`name.embed.html`；加上 `--poster` 時還有 `name.webp`，加上 `--ar` 時還有 `name.ar.glb` 與 `name.usdz`。
 
 **支援輸入**：`.glb`、`.gltf`、`.obj`（含 `.mtl`）。FBX 請先用 Blender 或 FBX2glTF 轉成 glTF。
 
@@ -130,10 +132,11 @@ mesh2web presets --json          # 以 JSON 輸出完整 preset 定義，方便�
   "output": "public/3d",
   "preset": "product",
   "publicPath": "/3d",
-  "budget": { "maxSizeKB": 1500, "maxTriangles": 80000 },
-  "textures": { "format": "webp", "maxSize": 2048 },
+  "budget": { "maxSizeKB": 1500, "maxTriangles": 80000, "maxTextureMemoryMB": 16 },
+  "textures": { "format": "ktx2", "maxSize": 2048 },
   "lod": [1, 0.5, 0.2],
   "poster": { "width": 1200, "format": "webp" },
+  "ar": true,
   "overrides": { "hero-robot.glb": { "preset": "hero" } }
 }
 ```
@@ -151,10 +154,28 @@ mesh2web presets --json          # 以 JSON 輸出完整 preset 定義，方便�
 1. **健檢**：面數、draw call、貼圖尺寸與 GPU 記憶體、缺法線、非 PBR 材質、公分單位、Z 軸朝上、未使用的資料。
 2. **清理**：去重、攤平階層、依材質合併網格、焊接頂點、清除未使用資源，缺法線時補上平滑法線。
 3. **減面**：用 meshoptimizer 在誤差上限內減面；仍超出預算時再自動*擠進預算*。
-4. **貼圖**：縮放並重新編碼成 WebP（Node 用 `sharp`，Studio 用 OffscreenCanvas）。
+4. **貼圖**：縮放並重新編碼成 WebP（Node 用 `sharp`，Studio 用 OffscreenCanvas），或轉成 **KTX2**（Basis Universal），讓貼圖在 GPU 上維持壓縮。詳見 [KTX2 貼圖](#ktx2)。
 5. **LOD**：為效能較弱的裝置產生低面數版本。
 6. **壓縮**：`EXT_meshopt_compression`（預設）或 Draco。
-7. **報告**：JSON 與 HTML，含處理前後對照與預估載入時間。
+7. **報告**：JSON 與 HTML，含處理前後對照、貼圖 GPU 記憶體與預估載入時間。
+
+<h3 id="ktx2">KTX2 貼圖</h3>
+
+WebP、JPEG 下載很小，但到了 GPU 會解成原始 RGBA：一張 2048 px 貼圖約佔 21 MB 顯示記憶體。KTX2 在 GPU 上仍保持壓縮，大約少 4 倍，手機比較不會掉幀或因記憶體不足重新載入分頁。
+
+```bash
+mesh2web optimize robot.glb --texture-format ktx2 --max-texture-memory 16
+```
+
+以產生的 `bad-knot.glb`（35.7 MB，一張 4096 px PNG）、`product` preset 實測：
+
+| | WebP（預設） | KTX2 |
+|---|---|---|
+| 檔案大小 | 556 KB | 926 KB |
+| 貼圖 GPU 記憶體 | 21.3 MB | **5.3 MB** |
+| 面數／draw call | 77,600／1 | 77,600／1 |
+
+KTX2 的下載量比 WebP 稍大，適合貼圖大、或同一頁有多個模型的情況。顏色貼圖用 ETC1S（sRGB），法線貼圖用 UASTC 以免出現色塊。`<web-model>` 只有在模型用到 KTX2 時才載入 Basis 轉碼器（壓縮後約 250 KB，預設來自 jsDelivr）。編碼使用 Basis Universal 編碼器（Apache-2.0），透過 [`ktx2-encoder`](https://github.com/gz65555/ktx2-encoder)（MIT）在 Node 與瀏覽器都能執行。
 
 <h2 id="web-model">&lt;web-model&gt;</h2>
 
@@ -174,7 +195,7 @@ import '@mesh2web/element'; // 註冊 <web-model>
 <script type="module" src="https://unpkg.com/@mesh2web/element@0.1/dist/web-model.js"></script>
 ```
 
-元件本體只有 **4 KB gzip**。three.js（約 170 KB gzip）拆成獨立 chunk，只在模型即將出現時才載入。
+元件本體只有 **5 KB gzip**。three.js（約 170 KB gzip）拆成獨立 chunk，只在模型即將出現時才載入。
 
 | 屬性 | 預設 | 說明 |
 |---|---|---|
@@ -194,14 +215,32 @@ import '@mesh2web/element'; // 註冊 <web-model>
 | `disable-zoom` | | 停用縮放 |
 | `autoplay` | | 自動播放第一段動畫 |
 | `draco-decoder-path` | gstatic CDN | 自架 Draco 解碼器的路徑 |
+| `ktx2-transcoder-path` | jsDelivr（three.js `libs/basis/`） | 自架 KTX2 轉碼器的路徑。`WebModel.ktx2TranscoderPath` 可一次設定所有元件 |
+| `ar` | | 在能開 AR 的手機與平板上顯示「View in your space」按鈕 |
+| `ar-src` | `src` | 交給 Android Scene Viewer 的 GLB（請用 `--ar` 的輸出：不含 Meshopt 與 KTX2） |
+| `ios-src` | 需要時自動產生 | 給 iOS AR Quick Look 的 USDZ。沒給的話，元件會在瀏覽器裡把已載入的模型轉成 USDZ |
+| `ar-placement` | `floor` | `floor`（地面）· `wall`（牆面） |
+| `ar-scale` | `auto` | `auto` 允許在 AR 中縮放，`fixed` 維持真實尺寸 |
 
-**屬性與方法**：`ready`（Promise）、`camera` `{ azimuth, polar, distance, fov }`、`animation` `{ progress, play(), pause(), duration, names }`、`exposure`、`scene`、`renderer`、`quality`、`reducedMotion`、`load()`、`invalidate()`、`renderOnce()`、`snapshot(type, quality)`。
+**屬性與方法**：`ready`（Promise）、`camera` `{ azimuth, polar, distance, fov }`、`animation` `{ progress, play(), pause(), duration, names }`、`exposure`、`scene`、`renderer`、`quality`、`reducedMotion`、`load()`、`invalidate()`、`renderOnce()`、`snapshot(type, quality)`、`arMode`（`quick-look` · `scene-viewer` · `null`）、`canActivateAR`、`activateAR()`、`exportUSDZ()`。
 
-**事件**：`load`、`progress`、`error`（`detail.code`：`no-webgl` · `load-failed`）、`quality-change`。
+**事件**：`load`、`progress`、`error`（`detail.code`：`no-webgl` · `load-failed`）、`quality-change`、`ar-status`（`session-started` · `failed`；取消事件即可自行開啟 `detail.url`）。
 
-**樣式**：`--web-model-aspect-ratio`（預設 `4 / 3`）、`--web-model-accent`、`--web-model-poster-fit`、`--web-model-fade`，以及 `::part(stage | poster | canvas | prompt | progress)`。
+**樣式**：`--web-model-aspect-ratio`（預設 `4 / 3`）、`--web-model-accent`、`--web-model-poster-fit`、`--web-model-fade`，以及 `::part(stage | poster | canvas | prompt | ar-button | progress)`，並可用 `slot="ar-button"` 替換 AR 按鈕內容。
 
 **內建行為**：畫面有變化才重繪；離開可視範圍或分頁隱藏時暫停；FPS 持續低於 30 時自動降低像素比；沒有 WebGL 時保留 poster；可用方向鍵旋轉（+／− 縮放）；預先保留版面空間，不會造成版面位移。
+
+<h3 id="ar">AR</h3>
+
+```bash
+mesh2web optimize chair.glb --ar
+```
+
+```html
+<web-model src="chair.glb" ar ar-src="chair.ar.glb" ios-src="chair.usdz" alt="橡木椅"></web-model>
+```
+
+在 Android 上按鈕會開啟 Google Scene Viewer，在 iPhone、iPad 上開啟 AR Quick Look；桌機上不顯示。兩者都是手機內建的 AR 檢視器，頁面裡不需要 WebXR 程式碼，也沒有額外下載。`chair.ar.glb` 使用 Draco 與 PNG／JPEG，因為 Scene Viewer 不支援 Meshopt 與 KTX2。`.usdz` 和元件在瀏覽器裡用的是同一個 three.js 轉換器，所以 `ios-src` 可以省略。
 
 ### 搭配 GSAP 做滾動敘事
 
@@ -246,6 +285,7 @@ scrollModel(gsap, model, {
 | | |
 |---|---|
 | [`examples/basic`](examples/basic) | 最簡單的嵌入 |
+| [`examples/ar`](examples/ar) | 在 Android 與 iOS 上「View in your space」 |
 | [`examples/scroll-story-gsap`](examples/scroll-story-gsap) | 透過 GSAP bridge 做釘選式 ScrollTrigger 滾動敘事 |
 | [`examples/product-viewer`](examples/product-viewer) | 用 JS API 切換顏色款式與相機視角 |
 | [`examples/with-react`](examples/with-react) | 在 React 裡使用元件 |
@@ -257,7 +297,7 @@ npm install
 npm run assets     # 產生 CC0 程序化測試模型
 npm run build      # 打包元件、Studio 用的 core、文件站相依檔
 npm test           # 單元測試（vitest）
-npm run test:e2e   # 無頭 Chromium 冒煙測試（playwright-core 需要可用的 Chromium）
+npm run test:e2e   # 無頭 Chromium 測試，含 KTX2 與 AR（playwright-core 需要可用的 Chromium）
 npm run dev        # http://127.0.0.1:5173/apps/docs/
 npm run media      # 重新產生 README 動圖與社群預覽圖（需要 ffmpeg）
 ```
@@ -271,26 +311,29 @@ mesh2web 建立在 glTF-Transform 與 meshoptimizer 之上，和 `<model-viewer>
 | | mesh2web | glTF-Transform / gltfpack | `<model-viewer>` |
 |---|---|---|---|
 | 減面、壓縮、縮放貼圖 | ✅ 有 preset | ✅ 低階參數 | — |
-| 體積／面數預算，超標讓 CI 失敗 | ✅ 結束碼 `2` | — | — |
+| KTX2 貼圖 | ✅ `--texture-format ktx2`，瀏覽器也能轉 | ✅（glTF-Transform 需另裝 `toktx`） | 只能讀取 |
+| 體積／面數／GPU 記憶體預算，超標讓 CI 失敗 | ✅ 結束碼 `2` | — | — |
 | 處理前後報告（HTML + JSON） | ✅ | 僅統計 | — |
 | 模型不離開本機的圖形介面 | ✅ Studio | — | 線上編輯器 |
 | 可嵌入的檢視元件 | ✅ `<web-model>` | — | ✅ |
 | poster 優先延遲載入、自適應品質、LOD | ✅ | — | poster 與延遲載入 |
 | 相機參數是純數字，可直接給 GSAP／滾動敘事 | ✅ | — | 屬性字串 |
-| AR（Scene Viewer、Quick Look） | 規劃中 | — | ✅ |
+| AR（Scene Viewer、Quick Look） | ✅ `ar` 屬性，`--ar` 輸出 AR 用 GLB 與 USDZ | — | ✅（另有 WebXR） |
 
-**選 mesh2web**：想用一套工具從髒的匯出檔一路做到快速、可滾動動畫的嵌入。**選 `<model-viewer>`**：手機 AR 是主要目標。**直接用 glTF-Transform**：你在寫自己的管線。
+**選 mesh2web**：想用一套工具從髒的匯出檔一路做到快速、可滾動動畫的嵌入，AR 檔也在同一步產生。**選 `<model-viewer>`**：需要在頁面內執行 WebXR AR。**直接用 glTF-Transform**：你在寫自己的管線。
 
 ## 路線圖
 
 - [x] CLI：健檢、優化、preset、預算、報告、LOD、watch 模式、poster
 - [x] `<web-model>`：poster、延遲載入、自適應品質、燈光 preset、手勢、無障礙、GSAP bridge
 - [x] Studio：瀏覽器內優化、分割對照、zip 匯出
-- [ ] KTX2／Basis 貼圖壓縮
-- [ ] 輸出 USDZ 給 iOS AR Quick Look
+- [x] KTX2／Basis 貼圖壓縮、貼圖 GPU 記憶體預算
+- [x] AR：Scene Viewer 與 Quick Look，輸出 USDZ
+- [ ] Studio 加上 KTX2 與 AR 選項
+- [ ] 頁面內 WebXR AR
 - [ ] 過度減面時以 SSIM 視覺差異提出警告
 - [ ] WebGPU 渲染器、Blender 外掛、AI 生成網格的自動修復
 
 ## 授權
 
-[MIT](LICENSE)。測試模型皆由程式產生（CC0）。建立在 [three.js](https://threejs.org)、[glTF-Transform](https://gltf-transform.dev) 與 [meshoptimizer](https://github.com/zeux/meshoptimizer) 之上。
+[MIT](LICENSE)。測試模型皆由程式產生（CC0）。建立在 [three.js](https://threejs.org)、[glTF-Transform](https://gltf-transform.dev)、[meshoptimizer](https://github.com/zeux/meshoptimizer) 與 [ktx2-encoder](https://github.com/gz65555/ktx2-encoder)（MIT，內含 Apache-2.0 授權的 [Basis Universal](https://github.com/BinomialLLC/basis_universal) 編碼器）之上。

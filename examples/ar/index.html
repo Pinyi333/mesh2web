@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mesh2web · AR</title>
+  <style>
+    :root { --ink: #161514; --paper: #efece6; --muted: #6f6b65; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--paper); color: var(--ink); font-family: system-ui, sans-serif; }
+    main { width: min(720px, 100%); display: grid; gap: 16px; }
+    p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    web-model { width: 100%; --web-model-accent: var(--ink); }
+  </style>
+  <!-- In your project: https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js -->
+  <script type="module" src="../../packages/element/dist/web-model.js"></script>
+</head>
+<body>
+  <main>
+    <!--
+      `ar` shows a "View in your space" button on phones and tablets:
+      Android opens Google Scene Viewer with `ar-src` (or `src`), iOS opens
+      AR Quick Look with `ios-src`, or a USDZ built in the browser on demand.
+      `mesh2web optimize model.glb --ar` writes model.ar.glb and model.usdz for you.
+    -->
+    <web-model
+      src="../basic/models/sculpture.glb"
+      alt="A cream ceramic sculpture circled by a thin gold ribbon"
+      lighting="studio-soft"
+      controls="orbit"
+      ar
+      ar-placement="floor"
+      loading="lazy"
+    ></web-model>
+    <p>Open this page on a phone to place the sculpture in your room. On desktop the AR button stays hidden.</p>
+  </main>
+</body>
+</html>

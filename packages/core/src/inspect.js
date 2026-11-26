@@ -1,4 +1,5 @@
 import { getBounds } from '@gltf-transform/functions';
+import { estimateGpuBytes } from './ktx2.js';
 
 /**
  * @typedef {import('@gltf-transform/core').Document} Document
@@ -15,6 +16,7 @@ import { getBounds } from '@gltf-transform/functions';
  * @property {number} width
  * @property {number} height
  * @property {number} bytes
+ * @property {number} gpuBytes  Estimated GPU memory once uploaded (with mipmaps).
  *
  * @typedef {Object} InspectResult
  * @property {number} triangles
@@ -27,6 +29,7 @@ import { getBounds } from '@gltf-transform/functions';
  * @property {number} animations
  * @property {TextureStat[]} textures
  * @property {number} textureBytes
+ * @property {number} textureGpuBytes  Estimated GPU memory of all textures.
  * @property {{ min: number[], max: number[], size: number[] }} bounds
  * @property {string[]} extensions
  * @property {Issue[]} issues
@@ -140,9 +143,13 @@ export function inspectDocument(doc) {
     const image = texture.getImage();
     const mimeType = texture.getMimeType();
     const { width, height } = texture.getSize() ? { width: texture.getSize()[0], height: texture.getSize()[1] } : readImageSize(image, mimeType);
-    return { name: texture.getName() || texture.getURI() || '(unnamed)', mimeType, width, height, bytes: image ? image.byteLength : 0 };
+    return {
+      name: texture.getName() || texture.getURI() || '(unnamed)', mimeType, width, height,
+      bytes: image ? image.byteLength : 0, gpuBytes: estimateGpuBytes(width, height, mimeType),
+    };
   });
   const textureBytes = textures.reduce((sum, t) => sum + t.bytes, 0);
+  const textureGpuBytes = textures.reduce((sum, t) => sum + t.gpuBytes, 0);
 
   // Bounds across all scenes.
   let min = [Infinity, Infinity, Infinity];
@@ -200,7 +207,7 @@ export function inspectDocument(doc) {
     if (Math.max(t.width, t.height) > LARGE_TEXTURE) {
       issues.push({
         level: 'warning', code: 'large-texture',
-        message: `Texture "${t.name}" is ${t.width}×${t.height}. GPU memory: ~${Math.round((t.width * t.height * 4 * 1.33) / 1048576)}MB.`,
+        message: `Texture "${t.name}" is ${t.width}×${t.height}. GPU memory: ~${Math.round(t.gpuBytes / 1048576)}MB.`,
         fix: `Presets cap textures at ${LARGE_TEXTURE}px or less.`,
       });
     }
@@ -244,7 +251,7 @@ export function inspectDocument(doc) {
     nodes: root.listNodes().length,
     materials: root.listMaterials().length,
     animations: root.listAnimations().length,
-    textures, textureBytes,
+    textures, textureBytes, textureGpuBytes,
     bounds: { min, max, size },
     extensions,
     issues,

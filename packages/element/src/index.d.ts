@@ -28,7 +28,11 @@ export interface WebModelEventMap extends HTMLElementEventMap {
   progress: CustomEvent<{ progress: number }>;
   error: CustomEvent<{ error: Error; code: 'no-webgl' | 'load-failed' | string }>;
   'quality-change': CustomEvent<{ tier: QualityTier; fps: number }>;
+  'ar-status': CustomEvent<{ status: 'session-started' | 'failed'; mode: ARMode | null; url?: string; error?: Error }>;
 }
+
+/** The platform AR viewer `<web-model ar>` hands the model to. */
+export type ARMode = 'quick-look' | 'scene-viewer';
 
 export class WebModel extends HTMLElement {
   src: string;
@@ -58,6 +62,18 @@ export class WebModel extends HTMLElement {
   renderOnce(): void;
   /** Capture the current view. */
   snapshot(type?: string, quality?: number): Promise<Blob | null>;
+  /** `quick-look` (iOS), `scene-viewer` (Android) or null. */
+  readonly arMode: ARMode | null;
+  /** True when `ar` is set and the device has an AR viewer. */
+  readonly canActivateAR: boolean;
+  /** Open the platform AR viewer. Call from a user gesture. */
+  activateAR(): Promise<void>;
+  /** The loaded model as USDZ (what Quick Look gets without `ios-src`). */
+  exportUSDZ(): Promise<Blob>;
+  /** Default KTX2 transcoder folder for all elements; the `ktx2-transcoder-path` attribute wins. */
+  static ktx2TranscoderPath: string;
+  /** Override device detection (tests, custom logic). */
+  static detectARMode: () => ARMode | null;
 
   addEventListener<K extends keyof WebModelEventMap>(type: K, listener: (this: WebModel, ev: WebModelEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
   addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
@@ -66,6 +82,8 @@ export class WebModel extends HTMLElement {
 /** Register `<web-model>` (or a custom tag). Called automatically on import. */
 export function define(tagName?: string): void;
 export function detectTier(): QualityTier;
+export function detectARMode(env?: { userAgent?: string; quickLook?: boolean }): ARMode | null;
+export function sceneViewerIntent(modelUrl: string, opts?: { title?: string; placement?: string; scale?: string; fallbackUrl?: string }): string;
 
 declare global {
   interface HTMLElementTagNameMap {

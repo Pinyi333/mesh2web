@@ -12,7 +12,9 @@ Part of [mesh2web](https://github.com/pinyi333/mesh2web).
 or `npm i @mesh2web/element` and `import '@mesh2web/element'`.
 
 - Poster first, lazy loading (`lazy` · `eager` · `interaction`), no layout shift
-- 4 KB gzip shell; three.js loads lazily as a separate chunk
+- 5 KB gzip shell; three.js loads lazily as a separate chunk
+- KTX2 (Basis) textures, with the transcoder fetched only when a model uses them
+- `ar`: "View in your space" via Android Scene Viewer and iOS AR Quick Look (`ar-src`, `ios-src`)
 - Adaptive quality + LOD selection (`lod-src`), on-demand rendering, off-screen pause
 - Lighting presets: `studio-soft`, `studio-hard`, `outdoor`, `neon`, `flat`
 - Page-first touch gestures, keyboard control, `role="img"`, reduced-motion support

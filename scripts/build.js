@@ -40,7 +40,9 @@ await build({
   minify: true,
   target: ['es2022', 'safari16'],
   platform: 'browser',
-  external: ['node:*'], // NodeIO paths are never reached in the browser
+  // NodeIO paths and the Emscripten Node branch of the Basis encoder are never
+  // reached in the browser.
+  external: ['node:*', 'module', 'fs', 'path', 'url', 'crypto', 'worker_threads'],
   legalComments: 'linked',
   logLevel: 'warning',
 });
@@ -69,6 +71,8 @@ for (const file of ['gsap.min.js', 'ScrollTrigger.min.js', 'SplitText.min.js']) 
 await cp(path.join(root, 'node_modules/lenis/dist/lenis.min.js'), path.join(lib, 'lenis.min.js'));
 
 await cp(path.join(root, 'packages/presets/src/optimize.json'), path.join(root, 'apps/studio/vendor/presets.json'));
+// Basis Universal encoder for Studio's KTX2 option (fetched only when used).
+await cp(path.join(root, 'node_modules/ktx2-encoder/dist/basis/basis_encoder.wasm'), path.join(root, 'apps/studio/vendor/basis_encoder.wasm'));
 
 for (const app of ['apps/docs', 'apps/studio']) {
   try {

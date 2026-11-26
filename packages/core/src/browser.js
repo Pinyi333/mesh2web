@@ -7,6 +7,7 @@
 import { Logger, WebIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP } from '@gltf-transform/extensions';
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
+import { ktx2Textures } from './ktx2.js';
 
 export * from './index.js';
 export { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier };
@@ -59,5 +60,43 @@ export function canvasTextureTransform(opts) {
       }
     }
     if (usedWebP) doc.createExtension(EXTTextureWebP).setRequired(true);
+  };
+}
+
+let ktx2Encoder;
+
+/**
+ * KTX2 step for browsers/workers: OffscreenCanvas decodes and resizes, the
+ * Basis Universal WASM encoder (from `ktx2-encoder`) compresses. The ~3 MB
+ * WASM is fetched on first use from `wasmUrl`; bundlers that do not copy
+ * `ktx2-encoder/dist/basis/basis_encoder.wasm` must pass it explicitly.
+ * @param {{ maxSize?: number, quality?: number, mode?: 'auto' | 'etc1s' | 'uastc' }} opts
+ * @param {{ wasmUrl?: string, onWarn?: (msg: string) => void }} [env]
+ * @returns {import('@gltf-transform/core').Transform | null}
+ */
+export function canvasKtx2Transform(opts, { wasmUrl, onWarn } = {}) {
+  if (typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap === 'undefined') return null;
+  const decode = async (image, mimeType, { width, height }) => {
+    const bitmap = await createImageBitmap(new Blob([image], { type: mimeType }), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    return { data: new Uint8Array(ctx.getImageData(0, 0, width, height).data.buffer), width, height };
+  };
+  return async (doc) => {
+    if (!ktx2Encoder) {
+      const { BrowserBasisEncoder } = await import('ktx2-encoder');
+      const encoder = new BrowserBasisEncoder();
+      // The Emscripten module binds `console.log` for its progress output when
+      // it starts; hand it a no-op so every encode does not flood the console.
+      const log = console.log;
+      console.log = () => {};
+      try { await encoder.init(wasmUrl ? { wasmUrl } : undefined); } finally { console.log = log; }
+      ktx2Encoder = encoder;
+    }
+    const encode = (image, o) => ktx2Encoder.encode(image, wasmUrl ? { ...o, wasmUrl } : o);
+    await ktx2Textures(opts, { encode, decode, onWarn })(doc);
   };
 }

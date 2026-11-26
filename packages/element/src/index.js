@@ -10,3 +10,4 @@ define();
 
 export { WebModel, define };
 export { detectTier } from './quality.js';
+export { detectARMode, sceneViewerIntent } from './ar.js';

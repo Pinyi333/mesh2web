@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Logger, NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { textureCompress } from '@gltf-transform/functions';
+import { cloneDocument, draco, textureCompress } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 import draco3d from 'draco3dgltf';
 
@@ -11,6 +11,7 @@ import { optimizeWithLods, resolveOptions } from './pipeline.js';
 import { createReport, renderHtmlReport } from './report.js';
 import { objToDocument } from './obj.js';
 import { createEmbedSnippet } from './embed.js';
+import { ktx2Textures } from './ktx2.js';
 
 export * from './index.js';
 
@@ -103,6 +104,70 @@ async function createNodeTextureTransform(warn) {
   });
 }
 
+let ktx2EncoderPromise;
+/**
+ * The Basis Universal encoder from `ktx2-encoder`, loaded on demand (the WASM
+ * is ~3 MB and only needed for KTX2). Its own instance is created with a silent
+ * `print`, because the default writes progress lines to stdout, which would
+ * corrupt `--json` output.
+ */
+function loadKtx2Encoder() {
+  ktx2EncoderPromise ??= (async () => {
+    const entry = import.meta.resolve('ktx2-encoder');
+    const { NodeBasisEncoder } = await import(entry);
+    const { default: BASIS } = await import(new URL('../basis/basis_encoder.js', entry).href);
+    const encoder = new NodeBasisEncoder();
+    encoder.modulePromise = BASIS({ print: () => {}, printErr: () => {} }).then((basis) => {
+      basis.initializeBasis();
+      return basis;
+    });
+    return encoder;
+  })();
+  return ktx2EncoderPromise;
+}
+
+/**
+ * KTX2 step for Node: sharp decodes and resizes, the Basis Universal encoder
+ * (WASM, from `ktx2-encoder`) compresses. Returns null (skip) without sharp.
+ */
+async function createNodeKtx2Transform(warn) {
+  const sharp = await loadSharp();
+  if (!sharp) {
+    warn?.('sharp is not installed; KTX2 needs it to decode textures. Textures are kept as-is. `npm i sharp` to enable KTX2.');
+    return () => null;
+  }
+  const decode = async (image, _mimeType, { width, height }) => {
+    const { data, info } = await sharp(image).resize(width, height, { fit: 'fill' }).ensureAlpha().raw()
+      .toBuffer({ resolveWithObject: true });
+    return { data: new Uint8Array(data.buffer, data.byteOffset, data.byteLength), width: info.width, height: info.height };
+  };
+  return (opts) => async (doc) => {
+    const encoder = await loadKtx2Encoder();
+    await ktx2Textures(opts, { encode: (image, o) => encoder.encode(image, o), decode, onWarn: warn })(doc);
+  };
+}
+
+/**
+ * Turn a cleaned, simplified document into the AR variant: plain PNG/JPEG
+ * textures and Draco geometry, the subset AR viewers (Android Scene Viewer,
+ * the USDZ converter) read reliably. Meshopt and KTX2 are left out on purpose.
+ * @param {import('@gltf-transform/core').Document} doc
+ * @param {{ maxSize?: number, quality?: number } | false} textures
+ */
+async function toArDocument(doc, textures) {
+  const sharp = await loadSharp();
+  if (sharp) {
+    const maxSize = (textures && textures.maxSize) || 2048;
+    await doc.transform(
+      // WebP sources become PNG (keeps alpha); everything is capped at maxSize.
+      textureCompress({ encoder: sharp, targetFormat: 'png', formats: /webp/ }),
+      textureCompress({ encoder: sharp, resize: [maxSize, maxSize], quality: (textures && textures.quality) || 85 }),
+    );
+  }
+  await doc.transform(draco({ method: 'edgebreaker' }));
+  return doc;
+}
+
 /**
  * Inspect a model file without modifying it.
  * @param {string} file
@@ -125,6 +190,11 @@ export async function inspectFile(file) {
  * @param {string} [options.name]    Output base name. Defaults to the input name.
  * @param {string} [options.publicPath]  URL prefix used in the embed snippet.
  * @param {boolean} [options.report=true]
+ * @param {boolean | { usdz?: (glbFile: string, usdzFile: string) => Promise<boolean> }} [options.ar]
+ *        Also write `<name>.ar.glb` for AR viewers and add `ar` attributes to the
+ *        embed snippet. `usdz` converts that GLB to `<name>.usdz` for iOS Quick Look
+ *        (the CLI does it in headless Chromium); without it `<web-model>` builds the
+ *        USDZ in the visitor's browser on demand.
  * @param {(msg: string) => void} [options.onStep]
  * @param {(msg: string) => void} [options.onWarn]
  * @param {import('./pipeline.js').OptimizeOptions} [options.optimize]
@@ -135,6 +205,7 @@ export async function optimizeFile(input, options = {}) {
     name = path.basename(input, path.extname(input)),
     publicPath = '',
     report: writeReports = true,
+    ar = false,
     onStep, onWarn,
     optimize = {},
   } = options;
@@ -144,10 +215,13 @@ export async function optimizeFile(input, options = {}) {
   const doc = await readModel(input);
   const before = { bytes: sourceBytes, stats: inspectDocument(doc) };
 
+  let arSource = null;
   const { lods } = await optimizeWithLods(doc, optimize, {
     simplifier: MeshoptSimplifier,
     encoder: MeshoptEncoder,
     textureTransform: await createNodeTextureTransform(onWarn),
+    ktx2Transform: await createNodeKtx2Transform(onWarn),
+    beforeTextures: ar ? (d) => { arSource = cloneDocument(d); } : undefined,
     onStep,
   });
 
@@ -168,6 +242,27 @@ export async function optimizeFile(input, options = {}) {
     outputs.push({ file, bytes: bytes.byteLength, triangles: inspectDocument(lod.doc).triangles });
   }
 
+  let arFile;
+  let usdzFile;
+  if (arSource) {
+    onStep?.('ar');
+    arFile = `${name}.ar.glb`;
+    const bytes = await writeGLB(await toArDocument(arSource, resolved.textures));
+    await writeFile(path.join(outDir, arFile), bytes);
+    outputs.push({ file: arFile, bytes: bytes.byteLength, triangles: inspectDocument(arSource).triangles });
+    if (typeof ar === 'object' && ar.usdz) {
+      const file = `${name}.usdz`;
+      try {
+        if (await ar.usdz(path.join(outDir, arFile), path.join(outDir, file))) {
+          usdzFile = file;
+          outputs.push({ file, bytes: (await readFile(path.join(outDir, file))).byteLength, triangles: outputs.at(-1).triangles });
+        }
+      } catch (err) {
+        onWarn?.(`USDZ skipped (iOS will build it on demand): ${err.message}`);
+      }
+    }
+  }
+
   const report = createReport({ name, preset: resolved.preset, before, after, budget: resolved.budget, outputs });
   const prefix = publicPath && !publicPath.endsWith('/') ? `${publicPath}/` : publicPath;
   const embed = createEmbedSnippet({
@@ -175,6 +270,7 @@ export async function optimizeFile(input, options = {}) {
     lods: lodFiles.map((f) => prefix + f),
     poster: prefix + `${name}.webp`,
     alt: name,
+    ar: arFile ? { src: prefix + arFile, iosSrc: usdzFile && prefix + usdzFile } : undefined,
   });
 
   if (writeReports) {
@@ -183,5 +279,9 @@ export async function optimizeFile(input, options = {}) {
     await writeFile(path.join(outDir, `${name}.embed.html`), embed);
   }
 
-  return { report, embed, outDir, files: outputs.map((o) => path.join(outDir, o.file)) };
+  return {
+    report, embed, outDir,
+    files: outputs.map((o) => path.join(outDir, o.file)),
+    arFile: arFile ? path.join(outDir, arFile) : undefined,
+  };
 }

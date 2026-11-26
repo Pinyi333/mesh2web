@@ -110,15 +110,17 @@ mesh2web presets --json          # preset definitions for scripts
 | `-o, --out` | Output directory |
 | `--geometry` | `meshopt` (default) · `draco` · `none` |
 | `--ratio` / `--no-simplify` | Simplification target (0–1) |
-| `--texture-size` / `--texture-format` | e.g. `1024`, `webp` · `jpeg` · `png` · `keep` |
+| `--texture-size` / `--texture-format` | e.g. `1024`, `webp` · `jpeg` · `png` · `ktx2` · `keep` |
+| `--texture-mode` | KTX2 only: `auto` (default: ETC1S for color, UASTC for normal maps) · `etc1s` · `uastc` |
 | `--no-lod` | Skip LOD files |
-| `--max-size` / `--max-triangles` | Budgets. Over budget exits with code `2` |
+| `--max-size` / `--max-triangles` / `--max-texture-memory` | Budgets (KB, triangles, MB of texture GPU memory). Over budget exits with code `2` |
 | `--no-fit` | Don't auto-simplify further to meet the triangle budget |
+| `--ar` | Also write `name.ar.glb` for Android Scene Viewer, `name.usdz` for iOS Quick Look (needs `playwright-core`) and add `ar` to the embed snippet |
 | `--poster` | Render `<name>.webp` with headless Chromium (needs `playwright-core`) |
 | `--public-path` | URL prefix used in the embed snippet |
 | `--json` | Machine-readable output |
 
-**Outputs**: `name.glb`, `name.lodN.glb`, `name.report.json`, `name.report.html` (self-contained before/after report), `name.embed.html` and, with `--poster`, `name.webp`.
+**Outputs**: `name.glb`, `name.lodN.glb`, `name.report.json`, `name.report.html` (self-contained before/after report), `name.embed.html`, with `--poster` `name.webp`, and with `--ar` `name.ar.glb` + `name.usdz`.
 
 **Inputs**: `.glb`, `.gltf`, `.obj` (+ `.mtl`). FBX: export to glTF from Blender (or FBX2glTF) first.
 
@@ -130,10 +132,11 @@ mesh2web presets --json          # preset definitions for scripts
   "output": "public/3d",
   "preset": "product",
   "publicPath": "/3d",
-  "budget": { "maxSizeKB": 1500, "maxTriangles": 80000 },
-  "textures": { "format": "webp", "maxSize": 2048 },
+  "budget": { "maxSizeKB": 1500, "maxTriangles": 80000, "maxTextureMemoryMB": 16 },
+  "textures": { "format": "ktx2", "maxSize": 2048 },
   "lod": [1, 0.5, 0.2],
   "poster": { "width": 1200, "format": "webp" },
+  "ar": true,
   "overrides": { "hero-robot.glb": { "preset": "hero" } }
 }
 ```
@@ -151,10 +154,28 @@ mesh2web presets --json          # preset definitions for scripts
 1. **Inspect**: triangles, draw calls, texture sizes and GPU memory, missing normals, non-PBR materials, centimeter scale, Z-up hints, unused data.
 2. **Clean**: dedup, flatten, join meshes by material, weld, prune, and add smooth normals where missing.
 3. **Simplify**: meshoptimizer with an error bound; then *fit the budget* if still over.
-4. **Textures**: resize and re-encode to WebP (via `sharp` in Node, OffscreenCanvas in Studio).
+4. **Textures**: resize and re-encode to WebP (via `sharp` in Node, OffscreenCanvas in Studio), or to **KTX2** (Basis Universal) so textures stay compressed on the GPU. See [KTX2 textures](#ktx2).
 5. **LOD**: simplified variants for weaker devices.
 6. **Compress**: `EXT_meshopt_compression` (default) or Draco.
-7. **Report**: JSON + HTML with before/after and estimated load times.
+7. **Report**: JSON + HTML with before/after, texture GPU memory and estimated load times.
+
+<h3 id="ktx2">KTX2 textures</h3>
+
+WebP and JPEG are small to download but are unpacked to raw RGBA on the GPU: a 2048 px texture takes ~21 MB of video memory. KTX2 stays compressed there, about 4× less, which is what keeps phones from dropping frames or reloading the tab.
+
+```bash
+mesh2web optimize robot.glb --texture-format ktx2 --max-texture-memory 16
+```
+
+Measured on the generated `bad-knot.glb` (35.7 MB, one 4096 px PNG), `product` preset:
+
+| | WebP (default) | KTX2 |
+|---|---|---|
+| File size | 556 KB | 926 KB |
+| Texture GPU memory | 21.3 MB | **5.3 MB** |
+| Triangles / draw calls | 77,600 / 1 | 77,600 / 1 |
+
+KTX2 files are a little larger to download than WebP, so pick it when the model has big textures or several models share a page. Color textures use ETC1S (sRGB), normal maps use UASTC so they stay smooth. `<web-model>` loads the Basis transcoder (about 250 KB compressed, from jsDelivr by default) only for models that use KTX2. Encoding uses the Basis Universal encoder (Apache-2.0) through [`ktx2-encoder`](https://github.com/gz65555/ktx2-encoder) (MIT), in Node and in the browser.
 
 <h2 id="web-model">&lt;web-model&gt;</h2>
 
@@ -174,7 +195,7 @@ Or straight from a CDN, no build step (pin the version you tested with):
 <script type="module" src="https://unpkg.com/@mesh2web/element@0.1/dist/web-model.js"></script>
 ```
 
-The element shell is **4 KB gzip**. three.js (≈170 KB gzip) loads as a separate chunk only when a model is about to be shown.
+The element shell is **5 KB gzip**. three.js (≈170 KB gzip) loads as a separate chunk only when a model is about to be shown.
 
 | Attribute | Default | |
 |---|---|---|
@@ -194,14 +215,32 @@ The element shell is **4 KB gzip**. three.js (≈170 KB gzip) loads as a separat
 | `disable-zoom` | | |
 | `autoplay` | | Play the first animation clip |
 | `draco-decoder-path` | gstatic CDN | Self-host the Draco decoder |
+| `ktx2-transcoder-path` | jsDelivr (three.js `libs/basis/`) | Self-host the KTX2 transcoder. `WebModel.ktx2TranscoderPath` sets it for every element |
+| `ar` | | Show a "View in your space" button on phones and tablets that can open AR |
+| `ar-src` | `src` | GLB handed to Android Scene Viewer (use the `--ar` output: no Meshopt, no KTX2) |
+| `ios-src` | built on demand | USDZ for iOS AR Quick Look. Without it, the element converts the loaded model in the browser |
+| `ar-placement` | `floor` | `floor` · `wall` |
+| `ar-scale` | `auto` | `auto` lets people resize the model in AR, `fixed` keeps real-world scale |
 
-**Properties and methods**: `ready` (Promise), `camera` `{ azimuth, polar, distance, fov }`, `animation` `{ progress, play(), pause(), duration, names }`, `exposure`, `scene`, `renderer`, `quality`, `reducedMotion`, `load()`, `invalidate()`, `renderOnce()`, `snapshot(type, quality)`.
+**Properties and methods**: `ready` (Promise), `camera` `{ azimuth, polar, distance, fov }`, `animation` `{ progress, play(), pause(), duration, names }`, `exposure`, `scene`, `renderer`, `quality`, `reducedMotion`, `load()`, `invalidate()`, `renderOnce()`, `snapshot(type, quality)`, `arMode` (`quick-look` · `scene-viewer` · `null`), `canActivateAR`, `activateAR()`, `exportUSDZ()`.
 
-**Events**: `load`, `progress`, `error` (`detail.code`: `no-webgl` · `load-failed`), `quality-change`.
+**Events**: `load`, `progress`, `error` (`detail.code`: `no-webgl` · `load-failed`), `quality-change`, `ar-status` (`session-started` · `failed`; cancel it to open `detail.url` yourself).
 
-**Styling**: `--web-model-aspect-ratio` (default `4 / 3`), `--web-model-accent`, `--web-model-poster-fit`, `--web-model-fade`, plus `::part(stage | poster | canvas | prompt | progress)`.
+**Styling**: `--web-model-aspect-ratio` (default `4 / 3`), `--web-model-accent`, `--web-model-poster-fit`, `--web-model-fade`, plus `::part(stage | poster | canvas | prompt | ar-button | progress)`, and `slot="ar-button"` to replace the AR button's content.
 
 **Built-in behavior**: renders only when something changes, pauses off-screen and in hidden tabs, lowers pixel ratio when FPS stays under 30, keeps the poster visible without WebGL, rotates with the arrow keys (+/− zoom), and reserves its box so nothing shifts.
+
+<h3 id="ar">AR</h3>
+
+```bash
+mesh2web optimize chair.glb --ar
+```
+
+```html
+<web-model src="chair.glb" ar ar-src="chair.ar.glb" ios-src="chair.usdz" alt="Oak chair"></web-model>
+```
+
+On Android the button opens Google Scene Viewer, on iPhone and iPad it opens AR Quick Look; on desktop it stays hidden. Both are the phone's own AR viewers, so there is no WebXR code or extra download in the page. `chair.ar.glb` uses Draco and PNG/JPEG because Scene Viewer does not read Meshopt or KTX2. The `.usdz` is made with the same three.js exporter the element uses in the browser, so `ios-src` is optional.
 
 ### Scroll stories with GSAP
 
@@ -246,6 +285,7 @@ Step-by-step guides for **Three.js**, **Webflow**, **Framer** and **WordPress** 
 | | |
 |---|---|
 | [`examples/basic`](examples/basic) | Minimal embed |
+| [`examples/ar`](examples/ar) | "View in your space" on Android and iOS |
 | [`examples/scroll-story-gsap`](examples/scroll-story-gsap) | Pinned ScrollTrigger story via the GSAP bridge |
 | [`examples/product-viewer`](examples/product-viewer) | Color variants and camera views using the JS API |
 | [`examples/with-react`](examples/with-react) | Using the element from React |
@@ -257,7 +297,7 @@ npm install
 npm run assets     # generate CC0 procedural test models
 npm run build      # bundle the element, Studio's worker core, docs vendor files
 npm test           # unit tests (vitest)
-npm run test:e2e   # headless Chromium smoke tests (needs a Chromium for playwright-core)
+npm run test:e2e   # headless Chromium tests incl. KTX2 and AR (needs a Chromium for playwright-core)
 npm run dev        # http://127.0.0.1:5173/apps/docs/
 npm run media      # re-render the README GIF and social preview (needs ffmpeg)
 ```
@@ -271,26 +311,29 @@ mesh2web is built on glTF-Transform and meshoptimizer, and sits next to `<model-
 | | mesh2web | glTF-Transform / gltfpack | `<model-viewer>` |
 |---|---|---|---|
 | Simplify, compress, resize textures | ✅ with presets | ✅ low-level flags | — |
-| Size / triangle budgets that fail CI | ✅ exit code `2` | — | — |
+| KTX2 textures | ✅ `--texture-format ktx2`, also in the browser | ✅ (needs the `toktx` binary in glTF-Transform) | decode only |
+| Size / triangle / GPU-memory budgets that fail CI | ✅ exit code `2` | — | — |
 | Before/after report (HTML + JSON) | ✅ | stats only | — |
 | GUI that keeps models local | ✅ Studio | — | online editor |
 | Embeddable viewer element | ✅ `<web-model>` | — | ✅ |
 | Poster-first lazy loading, adaptive quality, LODs | ✅ | — | poster + lazy |
 | Camera as plain numbers for GSAP / scroll stories | ✅ | — | attribute strings |
-| AR (Scene Viewer, Quick Look) | roadmap | — | ✅ |
+| AR (Scene Viewer, Quick Look) | ✅ `ar` + `--ar` writes AR GLB and USDZ | — | ✅ (+ WebXR) |
 
-**Pick mesh2web** when you want one tool from messy export to a fast, scroll-animated embed. **Pick `<model-viewer>`** when AR on phones is the main goal. **Use glTF-Transform directly** when you are writing your own pipeline.
+**Pick mesh2web** when you want one tool from messy export to a fast, scroll-animated embed, with AR files built in the same step. **Pick `<model-viewer>`** when you need in-page WebXR AR. **Use glTF-Transform directly** when you are writing your own pipeline.
 
 ## Roadmap
 
 - [x] CLI: inspect, optimize, presets, budgets, reports, LODs, watch mode, posters
 - [x] `<web-model>`: poster, lazy loading, adaptive quality, lighting presets, gestures, a11y, GSAP bridge
 - [x] Studio: in-browser optimization, split compare, zip export
-- [ ] KTX2 / Basis texture compression
-- [ ] USDZ output for iOS AR Quick Look
+- [x] KTX2 / Basis texture compression, texture GPU-memory budget
+- [x] AR: Scene Viewer + Quick Look, USDZ output
+- [ ] KTX2 and AR toggles in Studio
+- [ ] In-page WebXR AR
 - [ ] SSIM visual-diff warnings for over-simplification
 - [ ] WebGPU renderer, Blender add-on, auto-repair for AI-generated meshes
 
 ## License
 
-[MIT](LICENSE). Test models are generated from code (CC0). Built on [three.js](https://threejs.org), [glTF-Transform](https://gltf-transform.dev) and [meshoptimizer](https://github.com/zeux/meshoptimizer).
+[MIT](LICENSE). Test models are generated from code (CC0). Built on [three.js](https://threejs.org), [glTF-Transform](https://gltf-transform.dev), [meshoptimizer](https://github.com/zeux/meshoptimizer) and [ktx2-encoder](https://github.com/gz65555/ktx2-encoder) (MIT), which bundles the [Basis Universal](https://github.com/BinomialLLC/basis_universal) encoder (Apache-2.0).

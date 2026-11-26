@@ -4,9 +4,9 @@
  */
 import {
   ACESFilmicToneMapping, AgXToneMapping, AmbientLight, AnimationMixer, Box3,
-  CanvasTexture, Color, DirectionalLight, Group, HemisphereLight, LoopRepeat,
+  CanvasTexture, Color, DirectionalLight, FileLoader, Group, LoaderUtils, HemisphereLight, LoopRepeat,
   Mesh, MeshBasicMaterial, NeutralToneMapping, NoToneMapping, PerspectiveCamera,
-  PlaneGeometry, PMREMGenerator, PointLight, Scene, Sphere, SRGBColorSpace,
+  PlaneGeometry, PMREMGenerator, PointLight, REVISION, Scene, Sphere, SRGBColorSpace,
   Vector3, WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -26,8 +26,20 @@ const TONE_MAPPING = {
 
 const DEG = Math.PI / 180;
 const DEFAULT_DRACO = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
+// Basis Universal transcoder (Apache-2.0) shipped with the bundled three.js release.
+const DEFAULT_KTX2 = `https://cdn.jsdelivr.net/npm/three@0.${REVISION}/examples/jsm/libs/basis/`;
 
 /** Soft radial gradient used as a cheap contact shadow. */
+/** True when a GLB/glTF declares KTX2 textures (read from its JSON chunk). */
+export function usesKTX2(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const isGLB = bytes[0] === 0x67 && bytes[1] === 0x6c && bytes[2] === 0x54 && bytes[3] === 0x46; // "glTF"
+  const json = isGLB
+    ? bytes.subarray(20, 20 + new DataView(buffer).getUint32(12, true))
+    : bytes;
+  return new TextDecoder().decode(json).includes('"KHR_texture_basisu"');
+}
+
 function createShadowTexture(blur) {
   const size = 128;
   const canvas = document.createElement('canvas');
@@ -144,17 +156,30 @@ export class Viewer {
   /**
    * Fetch and parse a model. Does not display it; call `setModel` with the result.
    * @param {string} url
-   * @param {{ dracoDecoderPath?: string, onProgress?: (p: number) => void }} [opts]
+   * @param {{ dracoDecoderPath?: string, ktx2TranscoderPath?: string, onProgress?: (p: number) => void }} [opts]
    */
-  async load(url, { dracoDecoderPath = DEFAULT_DRACO, onProgress } = {}) {
+  async load(url, { dracoDecoderPath = DEFAULT_DRACO, ktx2TranscoderPath = DEFAULT_KTX2, onProgress } = {}) {
+    const file = new FileLoader().setResponseType('arraybuffer');
+    const buffer = await file.loadAsync(url, (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    });
     const loader = new GLTFLoader();
     const draco = new DRACOLoader().setDecoderPath(dracoDecoderPath);
     loader.setDRACOLoader(draco);
     loader.setMeshoptDecoder(MeshoptDecoder);
+    // KTX2 textures stay compressed on the GPU. The loader and its transcoder
+    // (JS + WASM) are only fetched for models that actually use them.
+    if (usesKTX2(buffer)) {
+      if (!this.ktx2 || this.ktx2Path !== ktx2TranscoderPath) {
+        const { KTX2Loader } = await import('three/examples/jsm/loaders/KTX2Loader.js');
+        this.ktx2?.dispose();
+        this.ktx2 = new KTX2Loader().setTranscoderPath(ktx2TranscoderPath).detectSupport(this.renderer);
+        this.ktx2Path = ktx2TranscoderPath;
+      }
+      loader.setKTX2Loader(this.ktx2);
+    }
     try {
-      return await loader.loadAsync(url, (e) => {
-        if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
-      });
+      return await loader.parseAsync(buffer, LoaderUtils.extractUrlBase(new URL(url, location.href).href));
     } finally {
       draco.dispose();
     }
@@ -385,8 +410,26 @@ export class Viewer {
     });
   }
 
+  /**
+   * Export the loaded model as USDZ for iOS AR Quick Look. GPU-compressed
+   * (KTX2) textures are decoded back to PNG/JPEG on the way.
+   * @returns {Promise<Blob>}
+   */
+  async exportUSDZ() {
+    if (!this.model) throw new Error('No model loaded');
+    const [{ USDZExporter }, { decompress }] = await Promise.all([
+      import('three/examples/jsm/exporters/USDZExporter.js'),
+      import('three/examples/jsm/utils/WebGLTextureUtils.js'),
+    ]);
+    const exporter = new USDZExporter();
+    exporter.setTextureUtils({ decompress: (texture) => decompress(texture, 2048) });
+    const buffer = await exporter.parseAsync(this.model, { quickLookCompatible: true, maxTextureSize: 2048 });
+    return new Blob([buffer], { type: 'model/vnd.usdz+zip' });
+  }
+
   dispose() {
     this.running = false;
+    this.ktx2?.dispose();
     this.visible = false;
     this.controls.dispose();
     if (this.model) this.disposeObject(this.model);
