@@ -33,10 +33,10 @@ window.mesh2webI18n?.register({
     'hero.title': '任何&nbsp;3D&nbsp;模型<br>一行指令<br><em>直接上網頁</em>',
     'hero.lead': 'mesh2web 會幫模型健檢、清理、減面與壓縮，再用輕量的 <code>&lt;web-model&gt;</code> 元件放上網頁，為滾動敘事與 GSAP 而設計。',
     'hero.studio': '在瀏覽器試用 Studio <span aria-hidden="true">→</span>',
-    'hero.modelAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶，緩緩旋轉',
-    'hero.posterAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶',
+    'hero.modelAlt': '厚實的液態鉻金屬環，有一個大孔和一個小孔，緩緩旋轉',
+    'hero.posterAlt': '厚實的液態鉻金屬環，有一個大孔和一個小孔',
     'hero.drag': '拖曳旋轉',
-    'hero.stats': '219 KB · 5.2 萬面',
+    'hero.stats': '287 KB · 7.4 萬面',
     'hero.scroll': '往下捲',
 
     'marquee.aria': '實測數據重點',

@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="preload" as="image" href="models/sculpture.webp">
+  <link rel="preload" as="image" href="models/chrome.webp">
   <script>document.documentElement.classList.add('js');</script>
   <script src="vendor/i18n.js"></script>
   <script type="module" src="vendor/element/web-model.js"></script>
@@ -71,19 +71,21 @@
       <div class="hero__stage" data-hero-model>
         <web-model
           id="hero-model"
-          src="models/sculpture.glb"
-          lod-src="models/sculpture.lod1.glb"
-          poster="models/sculpture.webp"
-          alt="A cream ceramic sculpture circled by a thin gold ribbon, slowly rotating"
+          src="models/chrome.glb"
+          lod-src="models/chrome.lod1.glb"
+          poster="models/chrome.webp"
+          alt="A thick, liquid-chrome loop with one large and one small opening, slowly rotating"
           data-i18n-attr="alt:hero.modelAlt"
           lighting="studio-soft"
+          environment="models/studio-chrome.hdr"
+          shadow="none"
           camera-orbit="-20 72 3.3"
           autorotate
           loading="eager"
         >
-          <img src="models/sculpture.webp" alt="A cream ceramic sculpture circled by a thin gold ribbon" data-i18n-attr="alt:hero.posterAlt">
+          <img src="models/chrome.webp" alt="A thick, liquid-chrome loop with one large and one small opening" data-i18n-attr="alt:hero.posterAlt">
         </web-model>
-        <p class="hero__caption" aria-hidden="true"><span data-i18n="hero.drag">Drag to rotate</span><span data-i18n="hero.stats">219 KB · 52k tris</span></p>
+        <p class="hero__caption" aria-hidden="true"><span data-i18n="hero.drag">Drag to rotate</span><span data-i18n="hero.stats">287 KB · 74k tris</span></p>
       </div>
       <div class="hero__scroll" aria-hidden="true"><span></span><b data-i18n="hero.scroll">Scroll</b></div>
     </section>

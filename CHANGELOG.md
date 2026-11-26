@@ -3,6 +3,21 @@
 All notable changes are documented here. This project follows
 [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **@mesh2web/element**: new `environment` attribute/property loads an
+  equirectangular map (`.hdr`, JPG, PNG, WebP) for reflections instead of the
+  lighting preset's room environment, so chrome and other mirror-like metals
+  get crisp, high-contrast reflections. The HDR decoder is a separate lazy
+  chunk, fetched only for `.hdr` files. New `tone-mapping` attribute
+  (`aces` · `agx` · `neutral` · `none`) overrides the preset. A broken
+  environment fires `error` with `code: 'environment-failed'` and falls back to
+  the preset without blocking the model.
+- **Site**: the hero model is a liquid-chrome loop (`models/chrome.glb`,
+  287 KB, 74k tris after `optimize --preset hero`; 3.41 MB and 149k tris
+  before) lit by a self-made studio environment (`models/studio-chrome.hdr`,
+  2048×1024). The sculpture used further down the page is unchanged.
+
 ## 0.1.0 (2026-11-27)
 
 First public version.

@@ -85,6 +85,17 @@ mesh2web：把 3D 模型（GLB／glTF／OBJ）優化成輕量、可一行 HTML �
 - 沒做：`spacing-audit.js` 的完整間距驗收（只量了標題斷行、導覽列位置與水平溢出）。
 - 踩雷：瀏覽器面板隱藏時 rAF 會暫停，GSAP 動畫卡在半途，截圖前要用 `gsap.globalTimeline.getChildren(true,true,true).forEach(t => t.progress(1))` 跑完。`.hero__scroll` 裡的 `<span>` 是捲動指示線，文字改包在 `<b>`。
 
+### 2026-11-26 `<web-model>` 自訂環境貼圖＋首屏換鉻金屬佔位模型 ✅ 完成（形體待改）
+
+- 分支：`claude/project-thread-pwgvo6`（先用一個 commit 把工作樹還原成 origin/main，再在上面改）
+- element：新增 `environment`（equirect `.hdr`／JPG／PNG／WebP，取代 preset 的 room 環境，強度固定 1，`.hdr` 解碼器拆成獨立 lazy chunk 1.6 KB gzip）、`tone-mapping`（`aces`／`agx`／`neutral`／`none`）。環境圖載入失敗會發 `error`（`code: 'environment-failed'`）並退回 preset，不會擋住模型。shell 仍是 4.1 KB gzip。
+- 首屏：`models/chrome.glb`／`chrome.lod1.glb`／`chrome.webp`＋`models/studio-chrome.hdr`（自製 2048×1024，458 KB）。版面、文案、字體、配色都沒動。sculpture.* 仍供下方區塊使用。
+- 模型數據（`optimize --preset hero`）：3.41 MB／149,008 面 → 286.7 KB／74,504 面（LOD1 149.5 KB／37,252 面），draw call 1 → 1。
+- 佔位說明：Penny 說形體「超怪」，明天要換。換模型只要替換 `apps/docs/models/chrome.glb`、`chrome.lod1.glb`、`chrome.webp`，再改 `index.html` 的 alt 與 `hero.stats`、`lang.js` 的 `hero.modelAlt`／`hero.posterAlt`／`hero.stats`、CHANGELOG 的數字。
+- 形體與環境圖的產生腳本：`/mnt/project-files/mesh2web-promo/hero/chrome-src/`（`sdf.py`、`env.py`、`glb.py`）。
+- 測試：lint 43/43、單元 25/25、e2e 8/8（新增環境貼圖那一項）。
+- 踩雷：marching cubes 的面法線在鉻面上會讓反射邊緣出現鋸齒。改用場的梯度當頂點法線就平滑了。PMREM 的解析度跟環境圖寬度有關（寬 ÷ 4），1024 寬時反射邊緣會糊，所以用 2048。
+
 ## 待辦事項清單
 
 - [x] GitHub 分支整理：原本預設分支是 `claude/adoring-mccarthy-r0tb2q`（見 PR #1 Heads-up），使用者已刪除並改用 `main` 為預設，2026-11-26 查證完成。已合併的 `claude/project-thread-gpwqcr` 還留在遠端，要不要刪由使用者決定。
