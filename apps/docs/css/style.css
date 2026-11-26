@@ -267,16 +267,39 @@ web-model img { width: 100%; height: 100%; object-fit: contain; }
   isolation: isolate;
 }
 .hero > .hud-dot { left: calc(var(--gutter) + 5%); top: clamp(110px, 18vh, 170px); }
-.hero__stage { grid-column: 1 / -1; grid-row: 1; position: relative; min-height: 44svh; margin: -3% 22% -2%; z-index: -1; }
-.hero__stage web-model { position: absolute; inset: 0; width: auto; height: auto; }
-.hero__stage::after { /* soft floor glow */
-  content: ''; position: absolute; left: 20%; right: 20%; bottom: 6%; height: 18%;
-  background: radial-gradient(closest-side, rgba(212, 255, 58, 0.14), transparent);
-  z-index: -1;
+/* Chrome form: two registered layers (back under the title, front over it).
+   Both stages share one box; never give them different geometry. */
+.hero {
+  --hero-back: url(../models/hero-chrome-dark-full.webp);
+  --hero-front: url(../models/hero-chrome-dark-front.webp);
+  --hero-form: min(70svh, 50vw);
+  --hero-fx: 0.04;
+  --hero-fy: 0.03;
 }
+.hero__stage {
+  grid-column: 1 / -1; grid-row: 1; position: relative; z-index: 0;
+  min-height: 44svh; margin: -3% 22% -2%;
+  pointer-events: none;
+}
+.hero__stage--front { z-index: 2; }
+.hero__layer {
+  /* Absolutely sized square centred on the stage (plus an offset), so the
+     form can be far bigger than its grid cell without growing the hero. */
+  position: absolute;
+  width: var(--hero-form); height: var(--hero-form);
+  /* --hero-fx/--hero-fy: offset as a fraction of the form's own size. */
+  left: calc(50% - var(--hero-form) * (0.5 - var(--hero-fx, 0)));
+  top: calc(50% - var(--hero-form) * (0.5 - var(--hero-fy, 0)));
+  background: var(--hero-layer) center / contain no-repeat;
+}
+.hero__layer--back { --hero-layer: var(--hero-back); }
+.hero__layer--front { --hero-layer: var(--hero-front); }
+/* Later: a <video>/<canvas> per layer fills its slot exactly. */
+.hero__layer > :is(video, canvas, img) { display: block; width: 100%; height: 100%; }
+.hero__meta, .hero__gap { display: none; }
 
 .hero__title {
-  grid-column: 1 / -1; grid-row: 1; align-self: center;
+  grid-column: 1 / -1; grid-row: 1; align-self: center; position: relative; z-index: 1;
   display: flex; justify-content: space-between; align-items: baseline; gap: 1em;
   padding: 0.1em 0.5em;
   font-size: clamp(1.9rem, 0.4rem + 3.2vw, 4.6rem);
@@ -291,10 +314,10 @@ web-model img { width: 100%; height: 100%; object-fit: contain; }
 .hero__word .line, .hero__word { padding-bottom: 0.06em; }
 :lang(zh-TW) .hero__title { font-weight: 300; letter-spacing: 0.04em; }
 
-.hud--stats { position: absolute; right: calc(var(--gutter) + 1%); top: clamp(96px, 15vh, 140px); min-width: 220px; }
-.hero .orb { position: absolute; right: calc(var(--gutter) + 3%); bottom: clamp(110px, 17vh, 170px); }
+.hud--stats { position: absolute; z-index: 3; right: calc(var(--gutter) + 1%); top: clamp(96px, 15vh, 140px); min-width: 220px; }
+.hero .orb { position: absolute; z-index: 3; right: calc(var(--gutter) + 3%); bottom: clamp(110px, 17vh, 170px); }
 
-.hero__copy { grid-column: 1; grid-row: 2; max-width: 620px; margin-top: clamp(8px, 2vh, 24px); }
+.hero__copy { grid-column: 1; grid-row: 2; position: relative; z-index: 3; max-width: 620px; margin-top: clamp(8px, 2vh, 24px); }
 .hero__lead { color: var(--muted); font-size: var(--step-0); line-height: 1.5; margin-top: 14px; max-width: 34em; }
 .hero__lead code { color: var(--fg); }
 .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin-top: 26px; }
@@ -337,7 +360,9 @@ web-model img { width: 100%; height: 100%; object-fit: contain; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto; padding-top: 88px; min-height: 0; }
-  .hero__stage { position: relative; inset: auto; height: min(52svh, 440px); grid-row: 2; margin: 8px -8% 0; }
+  /* The form rises out of its row into the title, so the type still crosses it. */
+  .hero { --hero-form: min(108vw, 54svh); --hero-fx: -0.04; --hero-fy: -0.16; }
+  .hero__stage { grid-row: 2; height: min(52svh, 440px); min-height: 0; margin: 8px -8% 0; }
   .hero__title { grid-row: 1; flex-wrap: wrap; font-size: clamp(1.5rem, 0.6rem + 5.6vw, 2.8rem); padding: 0.35em 0.6em; gap: 0.15em 0.6em; }
   .hero__word:last-child { margin-left: auto; }
   .hud--stats { position: absolute; left: var(--gutter); right: auto; top: auto; bottom: auto; min-width: 0; }
@@ -354,6 +379,118 @@ web-model img { width: 100%; height: 100%; object-fit: contain; }
   .hud--stats { padding: 10px 12px; }
   .hud--stats .hud__value { font-size: 1.05rem; }
   .hero .orb { width: 84px; }
+}
+
+/* --------------------------------------------------------------------------
+   Hero proposal B — poster (<html data-hero="poster">). Same markup as A:
+   grainy light paper, extended black type between hairlines, the chrome form
+   (light-studio render) woven through both lines, lime orb as the one accent.
+   -------------------------------------------------------------------------- */
+/* Black CJK for the poster headline only: Noto Sans TC 900 (SIL OFL 1.1, see
+   fonts/OFL-NotoSansTC.txt), subset to the glyphs of hero.titleA/titleB in zh-TW
+   (2.6 KB). Regenerate the subset if that copy changes. */
+@font-face {
+  font-family: 'mesh2web Hero TC';
+  src: url(../fonts/noto-sans-tc-900-hero.woff2) format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+[data-hero="poster"] .hero {
+  --hero-back: url(../models/hero-chrome-light-full.webp);
+  --hero-front: url(../models/hero-chrome-light-front.webp);
+  --hero-form: min(86svh, 62vw);
+  --hero-fx: 0.01;
+  --hero-fy: -0.03;
+  --hero-type: clamp(3.4rem, 9.5vw, 19svh);
+  --hero-rule: rgba(15, 15, 16, 0.3);
+  --line: rgba(15, 15, 16, 0.2);
+  --paper-muted: #56554f;
+  background: #e3e2dd;
+  color: var(--paper-ink);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  padding: clamp(76px, 10vh, 92px) var(--gutter) clamp(18px, 3vh, 28px);
+}
+[data-hero="poster"] .hero::before { /* printed-paper grain */
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: var(--grain, none); opacity: 0.18; mix-blend-mode: multiply;
+}
+[data-hero="poster"] .hero > .hud-dot { display: none; }
+[data-hero="poster"] .hero__meta {
+  grid-column: 1 / -1; grid-row: 1; position: relative; z-index: 3;
+  display: flex; justify-content: space-between; gap: 16px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--hero-rule);
+  font: 500 var(--step--2) / 1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--paper-muted);
+}
+[data-hero="poster"] .hero__stage { grid-row: 2; margin: 0; min-height: 0; }
+
+[data-hero="poster"] .hero__title {
+  grid-row: 2;
+  display: grid; justify-content: stretch; row-gap: 0.95em;
+  padding: 0;
+  font-size: var(--hero-type);
+  line-height: 0.85;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+[data-hero="poster"] .bracket::before, [data-hero="poster"] .bracket::after,
+[data-hero="poster"] .hero__paren { display: none; }
+[data-hero="poster"] .hero__gap { display: inline; }
+[data-hero="poster"] .hero__word {
+  display: block; overflow: hidden; padding: 0.08em 0 0.02em;
+  border-block: 1px solid var(--hero-rule);
+}
+[data-hero="poster"] .hero__word:last-child { text-align: right; }
+:lang(zh-TW)[data-hero="poster"] .hero__title {
+  font-family: 'Archivo', 'mesh2web Hero TC', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  font-weight: 900; letter-spacing: 0.01em; word-break: keep-all;
+  --hero-type: clamp(3.4rem, 16vw, 19svh);
+}
+
+/* Benchmark becomes a margin note between the two lines. */
+[data-hero="poster"] .hud--stats {
+  position: relative; grid-column: 1 / -1; grid-row: 2; justify-self: start; align-self: center;
+  top: auto; right: auto;
+  background: none; border: 0; padding: 0; min-width: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  color: var(--paper-ink);
+}
+[data-hero="poster"] .hud--stats .hud__label, [data-hero="poster"] .hud--stats .hud__meta { color: var(--paper-muted); }
+[data-hero="poster"] .hud__value span { color: var(--paper-ink); }
+
+[data-hero="poster"] .hero__copy {
+  grid-row: 3; display: grid; grid-template-columns: minmax(0, 30ch) auto; align-items: end; gap: 10px 48px;
+  max-width: none; margin-top: 0;
+}
+[data-hero="poster"] .hero__copy .eyebrow { grid-column: 1 / -1; color: var(--paper-muted); }
+[data-hero="poster"] .hero__lead { color: var(--paper-ink); font-size: var(--step--1); line-height: 1.45; margin-top: 0; }
+[data-hero="poster"] .hero__lead code { color: inherit; }
+[data-hero="poster"] .hero__actions { margin-top: 0; }
+[data-hero="poster"] .command { background: var(--paper-ink); color: var(--fg); }
+[data-hero="poster"] .command:hover { background: var(--lime); color: var(--ink); }
+[data-hero="poster"] .command__hint { background: var(--lime); color: var(--ink); }
+[data-hero="poster"] .hero .orb { box-shadow: none; width: clamp(80px, 7vw, 104px); bottom: clamp(64px, 9vh, 90px); }
+
+[data-hero="poster"] .hero__bar { grid-row: 4; margin-top: clamp(16px, 3vh, 28px); border-color: var(--hero-rule); color: var(--paper-muted); }
+[data-hero="poster"] .hero__scroll i { background: var(--hero-rule); }
+[data-hero="poster"] .hero__scroll i::after { background: var(--paper-ink); }
+
+@media (max-width: 900px) {
+  [data-hero="poster"] .hero {
+    --hero-form: 124vw; --hero-type: 17.4vw;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(470px, 1fr) auto auto;
+    padding-top: 76px;
+  }
+  :lang(zh-TW)[data-hero="poster"] .hero__title { --hero-type: 13.4vw; }
+  [data-hero="poster"] .hero__meta > span:nth-child(2) { display: none; }
+  [data-hero="poster"] .hero__stage { grid-row: 2; height: auto; align-self: center; margin: 0 -8%; }
+  [data-hero="poster"] .hero { --hero-fx: -0.06; --hero-fy: 0.08; }
+  /* Lines go to the top and bottom of the stage; the form crosses their edges. */
+  [data-hero="poster"] .hero__title { grid-row: 2; align-self: stretch; align-content: space-between; margin-block: 8px; white-space: normal; font-size: var(--hero-type); }
+  [data-hero="poster"] .hud--stats { display: none; }
+  [data-hero="poster"] .hero .orb { display: none; }
+  [data-hero="poster"] .hero__copy { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ==========================================================================
