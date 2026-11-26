@@ -167,7 +167,7 @@ function initHeroParallax() {
 }
 
 /* --------------------------------------------------------------------------
-   Nav spy: the section in view gets the signal-colour pill
+   Nav spy: the section in view gets the signal-orange pill
    -------------------------------------------------------------------------- */
 function initNavSpy() {
   document.querySelectorAll('.nav__links a[href^="#"]').forEach((link) => {
