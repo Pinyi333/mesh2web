@@ -11,9 +11,9 @@ const run = promisify(execFile);
 const bin = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/bin.js');
 
 /** Run the CLI and resolve with { code, stdout, stderr } instead of throwing. */
-async function cli(args, cwd) {
+async function cli(args, cwd, env = {}) {
   try {
-    const { stdout, stderr } = await run(process.execPath, [bin, ...args], { cwd, env: { ...process.env, NO_COLOR: '1' } });
+    const { stdout, stderr } = await run(process.execPath, [bin, ...args], { cwd, env: { ...process.env, NO_COLOR: '1', ...env } });
     return { code: 0, stdout, stderr };
   } catch (err) {
     return { code: err.code, stdout: err.stdout, stderr: err.stderr };
@@ -130,12 +130,18 @@ describe('mesh2web CLI', () => {
     const input = path.join(dir, 'tile.glb');
     await writeFile(input, await texturedGlb());
     const out = path.join(dir, 'ktx2');
-    const ok = await cli(['optimize', input, '-o', out, '--texture-format', 'ktx2', '--texture-size', '256', '--no-lod', '--ar', '--json']);
+    // No Chromium here on purpose: USDZ is skipped and the embed falls back to
+    // building it in the browser. (Otherwise CI runners with a system Chrome
+    // would render it, which is slow and covered by the e2e suite.)
+    const noChromium = { MESH2WEB_CHROMIUM: path.join(dir, 'no-chromium') };
+    const ok = await cli(['optimize', input, '-o', out, '--texture-format', 'ktx2', '--texture-size', '256', '--no-lod', '--ar', '--json'], undefined, noChromium);
     expect(ok.code).toBe(0);
     const report = JSON.parse(ok.stdout); // the Basis encoder must not print to stdout
     expect(report.after.stats.textures[0].mimeType).toBe('image/ktx2');
     expect(report.outputs.map((o) => o.file)).toEqual(expect.arrayContaining(['tile.glb', 'tile.ar.glb']));
-    expect(await readFile(path.join(out, 'tile.embed.html'), 'utf8')).toContain('ar-src="tile.ar.glb"');
+    const embed = await readFile(path.join(out, 'tile.embed.html'), 'utf8');
+    expect(embed).toContain('ar-src="tile.ar.glb"');
+    expect(embed).not.toContain('ios-src'); // no USDZ was written
 
     const over = await cli(['optimize', input, '-o', path.join(dir, 'ktx2b'), '--texture-format', 'ktx2', '--no-lod', '--max-texture-memory', '0.01']);
     expect(over.code).toBe(2);

@@ -64,11 +64,14 @@ async function withModelPage(glbFile, { width, height, attributes, what }, fn) {
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
 
-  const browser = await chromium.launch({
-    executablePath: process.env.MESH2WEB_CHROMIUM || undefined,
-    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
-  });
+  let browser;
   try {
+    // Launch inside try: if Chromium is missing, the server must still close,
+    // or the open socket keeps the CLI process alive.
+    browser = await chromium.launch({
+      executablePath: process.env.MESH2WEB_CHROMIUM || undefined,
+      args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+    });
     const tab = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
     await tab.goto(`http://127.0.0.1:${port}/`);
     await tab.evaluate(async () => {
@@ -79,7 +82,7 @@ async function withModelPage(glbFile, { width, height, attributes, what }, fn) {
     });
     return await fn(tab);
   } finally {
-    await browser.close();
+    await browser?.close();
     server.close();
   }
 }
