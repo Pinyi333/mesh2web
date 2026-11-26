@@ -75,5 +75,7 @@ for (const app of ['apps/docs', 'apps/studio']) {
     await stat(path.join(root, app));
     await rm(path.join(root, app, 'vendor/element'), { recursive: true, force: true }).catch(() => {});
     await cp(dist, path.join(root, app, 'vendor/element'), { recursive: true });
+    // Shared language detection and switching (see apps/shared/i18n.js).
+    await cp(path.join(root, 'apps/shared/i18n.js'), path.join(root, app, 'vendor/i18n.js'));
   } catch { /* app not present */ }
 }

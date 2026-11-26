@@ -9,6 +9,9 @@ const CONFIG = {
   steps: ['clean', 'simplify', 'textures', 'lod', 'compress'],
 };
 
+// Strings live in ./lang.js (English and Traditional Chinese), see apps/shared/i18n.js.
+const t = window.mesh2webI18n?.t ?? ((key) => key);
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 const ui = {
@@ -53,7 +56,7 @@ worker.onmessage = ({ data }) => {
   if (data.type === 'error') job.reject(new Error(data.message));
   else job.resolve(data);
 };
-worker.onerror = (e) => toast(`Worker error: ${e.message || 'failed to start'}`);
+worker.onerror = (e) => toast(t('toast.worker', { message: e.message || t('toast.workerStart') }));
 
 function call(message, transfer = [], onStep) {
   const id = ++seq;
@@ -97,10 +100,10 @@ async function loadFiles(fileList) {
   if (!files.length) return;
   const total = files.reduce((s, f) => s + f.size, 0);
   if (total > CONFIG.maxBytes) {
-    toast(`That's ${fmtBytes(total)}. For files over ${fmtBytes(CONFIG.maxBytes)}, use the CLI: npx @mesh2web/cli optimize`);
+    toast(t('toast.tooLarge', { size: fmtBytes(total), max: fmtBytes(CONFIG.maxBytes) }));
     return;
   }
-  setBusy(`Reading ${files.length > 1 ? `${files.length} files` : files[0].name}`);
+  setBusy(files.length > 1 ? t('step.readingFiles', { count: files.length }) : t('step.reading', { name: files[0].name }));
   try {
     const payload = await Promise.all(files.map(async (f) => ({ name: f.name, buffer: await f.arrayBuffer() })));
     const result = await call({ type: 'load', files: payload }, payload.map((p) => p.buffer));
@@ -111,7 +114,7 @@ async function loadFiles(fileList) {
 }
 
 async function loadSample() {
-  setBusy('Generating a messy sample');
+  setBusy(t('step.sample'));
   try {
     onLoaded(await call({ type: 'sample' }));
   } catch (err) {
@@ -144,18 +147,19 @@ function onLoaded({ name, bytes, stats, previewGlb }) {
   ui.fileBlock.hidden = false;
   ui.fileName.textContent = name;
   renderStats(ui.sourceStats, [
-    ['Size', fmtBytes(bytes)],
-    ['Triangles', fmtNum(stats.triangles)],
-    ['Draw calls', fmtNum(stats.drawCalls)],
-    ['Textures', `${stats.textures.length} · ${fmtBytes(stats.textureBytes)}`],
+    [t('stat.size'), fmtBytes(bytes)],
+    [t('stat.triangles'), fmtNum(stats.triangles)],
+    [t('stat.drawCalls'), fmtNum(stats.drawCalls)],
+    [t('stat.textures'), `${stats.textures.length} · ${fmtBytes(stats.textureBytes)}`],
   ]);
   ui.issuesCount.textContent = stats.issues.length;
+  // Issue messages come from @mesh2web/core and stay in English (shared with the CLI).
   ui.issues.innerHTML = stats.issues.map((i) => `
-    <li class="issue issue--${i.level}">
+    <li class="issue issue--${i.level}" lang="en">
       <p>${escapeHtml(i.message)}</p>${i.fix ? `<p class="issue__fix">${escapeHtml(i.fix)}</p>` : ''}
-    </li>`).join('') || '<li class="issue"><p>No issues found.</p></li>';
+    </li>`).join('') || `<li class="issue"><p>${escapeHtml(t('issues.none'))}</p></li>`;
   ui.issuesWrap.open = stats.issues.some((i) => i.level !== 'info');
-  if (!ui.alt.value) ui.alt.placeholder = `e.g. ${name.replace(/[-_]/g, ' ')}`;
+  if (!ui.alt.value) ui.alt.placeholder = t('panel.altExample', { name: name.replace(/[-_]/g, ' ') });
 
   ui.labelBefore.textContent = fmtBytes(bytes);
   ui.before.src = objectUrl(previewGlb);
@@ -188,15 +192,17 @@ async function runOptimize() {
   if (!state.source) return;
   if (state.running) { state.pendingRun = true; return; }
   state.running = true;
-  setBusy('Cleaning');
-  ui.labelAfter.textContent = 'Optimizing…';
+  setBusy(t('step.clean'));
+  ui.labelAfter.textContent = t('step.optimizing');
   ui.run.disabled = true;
   const started = performance.now();
 
+  const stepLabels = ['clean', 'normals', 'simplify', 'fit-budget', 'textures', 'lod', 'compress'];
   const onStep = (step) => {
-    const key = step.split(':')[0] === 'fit-budget' ? 'simplify' : step.split(':')[0];
+    const name = step.split(':')[0];
+    const key = name === 'fit-budget' ? 'simplify' : name;
     const index = CONFIG.steps.indexOf(key === 'normals' ? 'clean' : key);
-    ui.progressStep.textContent = { clean: 'Cleaning', normals: 'Generating normals', simplify: 'Simplifying', 'fit-budget': 'Fitting budget', textures: 'Resizing textures', lod: 'Building LODs', compress: 'Compressing' }[step.split(':')[0]] || step;
+    ui.progressStep.textContent = stepLabels.includes(name) ? t(`step.${name}`) : step;
     $$('[data-dot]').forEach((dot, i) => {
       dot.classList.toggle('is-done', i < index);
       dot.classList.toggle('is-active', i === index);
@@ -229,18 +235,22 @@ function showResult(report, elapsed) {
   ui.result.hidden = false;
   ui.labelAfter.textContent = fmtBytes(after.bytes);
   ui.resultSize.textContent = fmtBytes(after.bytes);
-  ui.resultSaved.textContent = `−${Math.round(report.reduction.bytes * 100)}% in ${(elapsed / 1000).toFixed(1)}s`;
+  ui.resultSaved.textContent = t('result.saved', { percent: Math.round(report.reduction.bytes * 100), seconds: (elapsed / 1000).toFixed(1) });
   renderStats(ui.resultStats, [
-    ['Triangles', `${fmtNum(before.stats.triangles)} → ${fmtNum(after.stats.triangles)}`],
-    ['Draw calls', `${before.stats.drawCalls} → ${after.stats.drawCalls}`],
-    ['Textures', `${fmtBytes(before.stats.textureBytes)} → ${fmtBytes(after.stats.textureBytes)}`],
-    ['Slow 4G', fmtMs(report.loadTimeMs['slow-4g'])],
-    ['Files', report.outputs.map((o) => o.file.replace(`${report.name}.`, '')).join(' · ')],
+    [t('stat.triangles'), `${fmtNum(before.stats.triangles)} → ${fmtNum(after.stats.triangles)}`],
+    [t('stat.drawCalls'), `${before.stats.drawCalls} → ${after.stats.drawCalls}`],
+    [t('stat.textures'), `${fmtBytes(before.stats.textureBytes)} → ${fmtBytes(after.stats.textureBytes)}`],
+    [t('stat.slow4g'), fmtMs(report.loadTimeMs['slow-4g'])],
+    [t('stat.files'), report.outputs.map((o) => o.file.replace(`${report.name}.`, '')).join(' · ')],
   ]);
   ui.budget.className = `budget ${report.budget.ok ? 'is-ok' : 'is-over'}`;
   ui.budget.textContent = report.budget.ok
-    ? 'Within budget'
-    : `Over budget: ${report.budget.violations.map((v) => (v.metric === 'size' ? `${fmtBytes(v.actual)} > ${fmtBytes(v.limit)}` : `${fmtNum(v.actual)} > ${fmtNum(v.limit)} tris`)).join(', ')}`;
+    ? t('result.withinBudget')
+    : t('result.overBudget', {
+      list: report.budget.violations.map((v) => (v.metric === 'size'
+        ? `${fmtBytes(v.actual)} > ${fmtBytes(v.limit)}`
+        : t('result.trisOver', { actual: fmtNum(v.actual), limit: fmtNum(v.limit) }))).join(', '),
+    });
   ui.embed.textContent = embedWithCurrentMeta();
 }
 
@@ -278,7 +288,7 @@ async function exportZip() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
-  toast('Downloaded. Unzip next to your page and paste the embed code.');
+  toast(t('toast.downloaded'));
 }
 
 /* ---------------------------------------------------------------------------
@@ -337,7 +347,14 @@ function selectPreset(name, { run = true } = {}) {
   ui.presets.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.preset === name)));
   const preset = state.presets[name];
   if (preset) {
-    ui.presetDesc.textContent = `${preset.description} Budget ${fmtNum(preset.budget.maxTriangles)} tris · ${preset.budget.maxSizeKB} KB.`;
+    // English descriptions come from presets.json; other languages translate them in lang.js.
+    const key = `preset.${name}`;
+    const translated = t(key);
+    ui.presetDesc.textContent = t('preset.desc', {
+      description: translated === key ? preset.description : translated,
+      tris: fmtNum(preset.budget.maxTriangles),
+      kb: preset.budget.maxSizeKB,
+    });
     ui.ratio.value = Math.round(preset.simplify.ratio * 100);
     ui.ratioOut.textContent = `${ui.ratio.value}%`;
     ui.maxTris.value = preset.budget.maxTriangles;
@@ -353,7 +370,7 @@ function initControls() {
   ui.run.addEventListener('click', runOptimize);
   ui.exportBtn.addEventListener('click', exportZip);
   ui.copyEmbed.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(embedWithCurrentMeta()); toast('Embed code copied'); } catch { toast('Copy failed: select the code below'); }
+    try { await navigator.clipboard.writeText(embedWithCurrentMeta()); toast(t('toast.copied')); } catch { toast(t('toast.copyFailed')); }
   });
 
   ui.presets.forEach((button, i) => {
