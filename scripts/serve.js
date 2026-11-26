@@ -19,8 +19,10 @@ export function startServer(listenPort = port) {
       let file = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
       if (!file.startsWith(root)) throw new Error('forbidden');
       if ((await stat(file)).isDirectory()) file = path.join(file, 'index.html');
+      // Read before writing headers: a missing index.html must still get the 404 below.
+      const body = await readFile(file);
       res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' });
-      res.end(await readFile(file));
+      res.end(body);
     } catch {
       res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
     }
