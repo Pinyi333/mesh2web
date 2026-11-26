@@ -45,6 +45,7 @@ function init() {
   initSplitTitles();          // section titles: line mask reveal
   initReveals();              // [data-reveal] generic entrances
   initHeroParallax();         // hero model drifts on scroll
+  initNavSpy();               // pill nav highlights the current section
 
   gsap.matchMedia().add('(hover: hover) and (pointer: fine)', () => {
     initMagnetic();           // magnetic buttons (desktop only)
@@ -136,12 +137,14 @@ function initPreloader() {
 function initHeroReveal() {
   const title = document.querySelector('.hero__title');
   const tl = gsap.timeline();
-  if (title && window.SplitText) {
-    const split = new SplitText(title, { type: 'lines', linesClass: 'line', mask: 'lines' });
+  if (title) {
+    const words = title.querySelectorAll('.hero__word');
     gsap.set(title, { visibility: 'visible' });
-    tl.from(split.lines, { yPercent: 115, duration: CONFIG.hero.duration, ease: CONFIG.ease.strong, stagger: CONFIG.hero.stagger });
-  } else if (title) {
-    gsap.set(title, { visibility: 'visible' });
+    // Words slide out from the centre towards their brackets.
+    tl.from(words, {
+      xPercent: (i) => (i ? -40 : 40), opacity: 0, filter: 'blur(8px)',
+      duration: CONFIG.hero.duration, ease: CONFIG.ease.strong, stagger: CONFIG.hero.stagger,
+    });
   }
   tl.fromTo('[data-hero-fade]', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: CONFIG.ease.out, stagger: 0.08 }, 0.35)
     .from('[data-hero-model]', { y: 80, opacity: 0, duration: 1.6, ease: CONFIG.ease.expo }, 0.1);
@@ -159,6 +162,20 @@ function initHeroParallax() {
     gsap.to('[data-hero-model]', {
       yPercent: 14, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+    });
+  });
+}
+
+/* --------------------------------------------------------------------------
+   Nav spy: the section in view gets the signal-orange pill
+   -------------------------------------------------------------------------- */
+function initNavSpy() {
+  document.querySelectorAll('.nav__links a[href^="#"]').forEach((link) => {
+    const target = document.querySelector(link.getAttribute('href'));
+    if (!target) return;
+    ScrollTrigger.create({
+      trigger: target, start: 'top 55%', end: 'bottom 55%',
+      onToggle: (self) => (self.isActive ? link.setAttribute('aria-current', 'true') : link.removeAttribute('aria-current')),
     });
   });
 }
