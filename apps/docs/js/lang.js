@@ -1,0 +1,101 @@
+/* ==========================================================================
+   mesh2web docs — dictionaries for vendor/i18n.js (see apps/shared/i18n.js).
+   `en` only holds strings used from JS: the English page text is the HTML.
+   `zh-TW` must cover every data-i18n key; the e2e test fails on gaps.
+   ========================================================================== */
+window.mesh2webI18n?.register({
+  en: {
+    'lang.switch.label': '中文',
+    'lang.switch.aria': '切換為繁體中文',
+    'copy.copy': 'Copy',
+    'copy.copied': 'Copied',
+    'copy.select': 'Select',
+  },
+  'zh-TW': {
+    'lang.switch.label': 'EN',
+    'lang.switch.aria': 'Switch to English',
+    'copy.copy': '複製',
+    'copy.copied': '已複製',
+    'copy.select': '請手動選取',
+
+    'meta.title': 'mesh2web — 任何 3D 模型，直接放上網頁',
+    'meta.description': '開源的 3D 模型網頁化流程：把任何 3D 模型變成輕量、好看、可嵌入的網頁元件。包含 CLI、在瀏覽器執行的 Studio，以及不綁框架的 <web-model> 元件。',
+    'meta.ogDescription': '34 MB → 556 KB。優化、嵌入 3D，並做滾動動畫。MIT 授權。',
+
+    skip: '跳到主要內容',
+    'nav.home': 'mesh2web 首頁',
+    'nav.aria': '主選單',
+    'nav.pipeline': '處理流程',
+    'nav.element': '元件',
+    'nav.usage': '用法',
+
+    'hero.eyebrow': '開源 · MIT 授權 · 不需要框架',
+    'hero.title': '任何&nbsp;3D&nbsp;模型<br>一行指令<br><em>直接上網頁</em>',
+    'hero.lead': 'mesh2web 會幫模型健檢、清理、減面與壓縮，再用輕量的 <code>&lt;web-model&gt;</code> 元件放上網頁，為滾動敘事與 GSAP 而設計。',
+    'hero.studio': '在瀏覽器試用 Studio <span aria-hidden="true">→</span>',
+    'hero.modelAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶，緩緩旋轉',
+    'hero.posterAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶',
+    'hero.drag': '拖曳旋轉',
+    'hero.stats': '219 KB · 5.2 萬面',
+    'hero.scroll': '往下捲',
+
+    'marquee.aria': '實測數據重點',
+    'marquee.tris': '34.8 萬 → 7.8 萬面',
+    'marquee.load': '慢速 4G 約 2.9 秒',
+    'marquee.shell': '元件本體 4 KB',
+
+    'story.modelAlt': '同一座雕塑，隨著你捲動處理流程而旋轉',
+    'story.meter': '檔案大小',
+    'story.title': '<span class="eyebrow">處理流程</span>從原始匯出檔到<em>正式上線</em>',
+    'story.inspect.title': '健檢',
+    'story.inspect.body': '找出 4K 貼圖、缺少法線、公分單位、Z 軸朝上的匯出檔與沒用到的資料，每一項都附修正建議。',
+    'story.clean.title': '清理',
+    'story.clean.body': '焊接重複頂點、移除沒用到的網格與材質、合併共用材質的網格，並補上平滑法線。',
+    'story.simplify.title': '減面',
+    'story.simplify.body': '用 meshoptimizer 把面數減到 preset 的預算內，同時保留輪廓與 UV 接縫，再產生 LOD。',
+    'story.compress.title': '壓縮',
+    'story.compress.body': 'Meshopt 或 Draco 幾何壓縮，貼圖轉 WebP 並依 preset 限制尺寸。JSON 與 HTML 報告會列出處理前後的差異。',
+    'story.ship.title': '上線',
+    'story.ship.body': '產出 poster、嵌入碼，以及只有 4 KB 的元件：模型捲進畫面時才延遲載入 three.js。',
+
+    'features.eyebrow': '&lt;web-model&gt; 元件',
+    'features.title': '寫 HTML 就搞定九成，<br>其餘交給 JS&nbsp;API。',
+    'features.poster.title': 'Poster 優先',
+    'features.poster.body': 'Poster 會立刻填滿預留的區塊，不影響 LCP，版面也不會跳動。模型準備好後再淡入。',
+    'features.adaptive.title': '自適應品質',
+    'features.adaptive.body': '依 GPU、記憶體與螢幕挑選 LOD 和像素比，幀率掉下來時自動降一級。',
+    'features.idle.title': '閒置零成本',
+    'features.idle.body': '畫面有變化才重繪。離開畫面或分頁隱藏時暫停。three.js 拆成獨立 chunk 延遲載入。',
+    'features.gestures.title': '頁面優先的手勢',
+    'features.gestures.body': '單指滾動頁面，水平滑動或雙指旋轉模型。滾輪縮放需要按住 Ctrl/⌘。',
+    'features.lighting.title': '調校好的燈光',
+    'features.lighting.body': '五種 preset，內含環境光、色調映射與柔和的接觸陰影，模型不會看起來又平又灰。',
+    'features.a11y.title': '無障礙',
+    'features.a11y.body': '使用 <code>role="img"</code> 與 ARIA 標籤，可用方向鍵旋轉，並遵守 <code>prefers-reduced-motion</code>。沒有 WebGL 時改顯示 poster。',
+
+    'lab.eyebrow': '燈光 preset',
+    'lab.title': '改一個屬性，<br>氛圍就不同。',
+    'lab.aria': '燈光 preset',
+    'lab.modelAlt': '套用所選燈光 preset 的雕塑',
+
+    'usage.eyebrow': '用法',
+    'usage.title': '三個步驟，<br>不需要打包工具。',
+    'usage.aria': '用法範例',
+    'usage.tab.optimize': '1 · 優化',
+    'usage.tab.embed': '2 · 嵌入',
+    'usage.tab.animate': '3 · 動畫',
+    'usage.c.inspect': '# 健檢：面數、貼圖、問題與修正建議',
+    'usage.c.optimize': '# 用 preset 優化：hero · product · ambient',
+    'usage.c.build': '# 依 mesh2web.config.json 批次處理並監看（超出預算時結束碼為 2）',
+
+    'packages.eyebrow': '套件',
+    'packages.title': '整條流程一起用，<br>或只挑需要的那一段。',
+    'packages.cli': 'inspect · optimize · build --watch · CI 預算',
+    'packages.element': '&lt;web-model&gt; Web Component 與 GSAP bridge',
+    'packages.core': 'Node 與瀏覽器共用的處理流程，建立在 glTF-Transform 之上',
+    'packages.studio': '拖曳即用，模型不會離開你的瀏覽器。',
+
+    'footer.license': 'MIT 授權。建立在 three.js、glTF-Transform 與 meshoptimizer 之上。',
+    'footer.readmeHref': 'https://github.com/pinyi333/mesh2web/blob/main/README.zh-TW.md',
+  },
+});

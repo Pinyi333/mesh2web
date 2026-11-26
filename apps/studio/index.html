@@ -4,50 +4,55 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>mesh2web Studio</title>
-  <meta name="description" content="Optimize 3D models for the web, entirely in your browser. Drop a GLB, glTF or OBJ: inspect, simplify, compress, compare and export.">
+  <meta name="description" content="Optimize 3D models for the web, entirely in your browser. Drop a GLB, glTF or OBJ: inspect, simplify, compress, compare and export." data-i18n-attr="content:meta.description">
+  <link rel="alternate" hreflang="en" href="https://pinyi333.github.io/mesh2web/studio/?lang=en">
+  <link rel="alternate" hreflang="zh-Hant" href="https://pinyi333.github.io/mesh2web/studio/?lang=zh-TW">
+  <link rel="alternate" hreflang="x-default" href="https://pinyi333.github.io/mesh2web/studio/">
   <meta name="theme-color" content="#0b0b0c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 10v12L16 29 4 22V10z' fill='none' stroke='%23d4ff3a' stroke-width='2.5'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/i18n.js"></script>
   <script type="module" src="vendor/element/web-model.js"></script>
   <script type="module" src="js/main.js"></script>
 </head>
 <body data-state="empty">
   <header class="bar">
-    <a class="bar__logo" href="../" aria-label="mesh2web home">
+    <a class="bar__logo" href="../" aria-label="mesh2web home" data-i18n-attr="aria-label:bar.home">
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 10v12L16 29 4 22V10z"/><path d="M4 10l12 7 12-7M16 17v12"/></svg>
       <span>mesh2web <em>Studio</em></span>
     </a>
-    <p class="bar__privacy"><span class="dot" aria-hidden="true"></span>Runs locally. Nothing is uploaded.</p>
+    <p class="bar__privacy"><span class="dot" aria-hidden="true"></span><span data-i18n="bar.privacy">Runs locally. Nothing is uploaded.</span></p>
+    <button class="bar__lang" type="button" data-lang-switch lang="zh-TW" aria-label="切換為繁體中文">中文</button>
     <a class="bar__link" href="https://github.com/pinyi333/mesh2web">GitHub ↗</a>
   </header>
 
   <main class="app">
     <!-- ======================= Viewport ======================= -->
-    <section class="viewport" aria-label="Model preview">
+    <section class="viewport" aria-label="Model preview" data-i18n-attr="aria-label:viewport.aria">
       <div class="drop" data-drop>
         <input type="file" id="file" accept=".glb,.gltf,.bin,.obj,.mtl,.png,.jpg,.jpeg,.webp" multiple hidden>
         <div class="drop__inner">
           <p class="drop__eyebrow">GLB · glTF · OBJ</p>
-          <h1 class="drop__title">Drop a model<br><em>to make it web-ready.</em></h1>
+          <h1 class="drop__title" data-i18n="drop.title">Drop a model<br><em>to make it web-ready.</em></h1>
           <div class="drop__actions">
-            <label class="btn btn--solid" for="file">Choose files</label>
-            <button class="btn" type="button" data-sample>Try a messy sample</button>
+            <label class="btn btn--solid" for="file" data-i18n="drop.choose">Choose files</label>
+            <button class="btn" type="button" data-sample data-i18n="drop.sample">Try a messy sample</button>
           </div>
-          <p class="drop__note">Inspect, simplify, compress and compare. Nothing leaves your device.<br>Over 200 MB? Use <code>npx @mesh2web/cli</code>.</p>
+          <p class="drop__note" data-i18n="drop.note">Inspect, simplify, compress and compare. Nothing leaves your device.<br>Over 200 MB? Use <code>npx @mesh2web/cli</code>.</p>
         </div>
       </div>
 
       <div class="compare" data-compare hidden>
-        <web-model class="compare__before" data-before alt="Original model" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
-        <web-model class="compare__after" data-after alt="Optimized model" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
-        <div class="compare__handle" data-handle role="slider" tabindex="0" aria-label="Before and after split" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
-        <p class="compare__label compare__label--before"><span>Before</span><b data-label-before>—</b></p>
-        <p class="compare__label compare__label--after"><span>After</span><b data-label-after>Optimizing…</b></p>
+        <web-model class="compare__before" data-before alt="Original model" data-i18n-attr="alt:compare.beforeAlt" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
+        <web-model class="compare__after" data-after alt="Optimized model" data-i18n-attr="alt:compare.afterAlt" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
+        <div class="compare__handle" data-handle role="slider" tabindex="0" aria-label="Before and after split" data-i18n-attr="aria-label:compare.handle" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
+        <p class="compare__label compare__label--before"><span data-i18n="compare.before">Before</span><b data-label-before>—</b></p>
+        <p class="compare__label compare__label--after"><span data-i18n="compare.after">After</span><b data-label-after data-i18n="step.optimizing">Optimizing…</b></p>
         <div class="progress" data-progress hidden>
-          <span class="progress__step" data-progress-step>Starting</span>
+          <span class="progress__step" data-progress-step data-i18n="step.starting">Starting</span>
           <ol class="progress__dots" aria-hidden="true">
             <li data-dot="clean"></li><li data-dot="simplify"></li><li data-dot="textures"></li><li data-dot="lod"></li><li data-dot="compress"></li>
           </ol>
@@ -56,20 +61,20 @@
     </section>
 
     <!-- ======================= Panel ======================= -->
-    <aside class="panel" aria-label="Settings and results">
+    <aside class="panel" aria-label="Settings and results" data-i18n-attr="aria-label:panel.aria">
       <section class="panel__block" data-file-block hidden>
-        <p class="label">Source</p>
+        <p class="label" data-i18n="panel.source">Source</p>
         <h2 class="file-name" data-file-name>—</h2>
         <dl class="stats" data-source-stats></dl>
         <details class="issues" data-issues-wrap>
-          <summary><span data-issues-count>0</span> findings</summary>
+          <summary><span data-issues-count>0</span> <span data-i18n="panel.findings">findings</span></summary>
           <ul data-issues></ul>
         </details>
-        <button class="btn btn--ghost btn--small" type="button" data-replace>Load another model</button>
+        <button class="btn btn--ghost btn--small" type="button" data-replace data-i18n="panel.replace">Load another model</button>
       </section>
 
       <section class="panel__block">
-        <p class="label" id="preset-label">Preset</p>
+        <p class="label" id="preset-label" data-i18n="panel.preset">Preset</p>
         <div class="segmented" role="radiogroup" aria-labelledby="preset-label" data-presets>
           <button type="button" role="radio" aria-checked="false" data-preset="hero">hero</button>
           <button type="button" role="radio" aria-checked="true" data-preset="product">product</button>
@@ -78,63 +83,63 @@
         <p class="hint" data-preset-desc></p>
 
         <details class="advanced">
-          <summary>Fine-tune</summary>
+          <summary data-i18n="panel.fineTune">Fine-tune</summary>
           <div class="field">
-            <label for="ratio">Simplify target <output data-ratio-out>60%</output></label>
+            <label for="ratio"><span data-i18n="panel.ratio">Simplify target</span> <output data-ratio-out>60%</output></label>
             <input type="range" id="ratio" min="5" max="100" step="5" value="60" data-ratio>
           </div>
           <div class="field">
-            <label for="max-tris">Triangle budget</label>
+            <label for="max-tris" data-i18n="panel.maxTris">Triangle budget</label>
             <input type="number" id="max-tris" min="100" step="1000" inputmode="numeric" data-max-tris>
           </div>
           <div class="field">
-            <label for="tex">Max texture size</label>
+            <label for="tex" data-i18n="panel.texture">Max texture size</label>
             <select id="tex" data-texture-size>
               <option value="512">512 px</option>
               <option value="1024">1024 px</option>
               <option value="2048" selected>2048 px</option>
               <option value="4096">4096 px</option>
-              <option value="keep">Keep original</option>
+              <option value="keep" data-i18n="panel.textureKeep">Keep original</option>
             </select>
           </div>
           <div class="field">
-            <label for="geo">Geometry</label>
+            <label for="geo" data-i18n="panel.geometry">Geometry</label>
             <select id="geo" data-geometry>
-              <option value="meshopt" selected>Meshopt compression</option>
-              <option value="none">Quantize only</option>
+              <option value="meshopt" selected data-i18n="panel.geoMeshopt">Meshopt compression</option>
+              <option value="none" data-i18n="panel.geoNone">Quantize only</option>
             </select>
           </div>
-          <label class="check"><input type="checkbox" data-lod checked> Generate LODs</label>
-          <label class="check"><input type="checkbox" data-fit checked> Auto-fit triangle budget</label>
+          <label class="check"><input type="checkbox" data-lod checked> <span data-i18n="panel.lod">Generate LODs</span></label>
+          <label class="check"><input type="checkbox" data-fit checked> <span data-i18n="panel.fit">Auto-fit triangle budget</span></label>
         </details>
-        <button class="btn btn--solid btn--wide" type="button" data-run disabled>Optimize</button>
+        <button class="btn btn--solid btn--wide" type="button" data-run disabled data-i18n="panel.run">Optimize</button>
       </section>
 
       <section class="panel__block">
-        <p class="label">Look</p>
+        <p class="label" data-i18n="panel.look">Look</p>
         <div class="field">
-          <label for="lighting">Lighting</label>
+          <label for="lighting" data-i18n="panel.lighting">Lighting</label>
           <select id="lighting" data-lighting>
             <option>studio-soft</option><option>studio-hard</option><option>outdoor</option><option>neon</option><option>flat</option>
           </select>
         </div>
         <div class="field">
-          <label for="alt">Alt text</label>
-          <input type="text" id="alt" placeholder="Describe the model for screen readers" data-alt>
+          <label for="alt" data-i18n="panel.alt">Alt text</label>
+          <input type="text" id="alt" placeholder="Describe the model for screen readers" data-i18n-attr="placeholder:panel.altPlaceholder" data-alt>
         </div>
       </section>
 
       <section class="panel__block result" data-result hidden>
-        <p class="label">Result</p>
+        <p class="label" data-i18n="panel.result">Result</p>
         <p class="result__big"><span data-result-size>—</span><small data-result-saved></small></p>
         <dl class="stats" data-result-stats></dl>
         <p class="budget" data-budget></p>
         <div class="result__actions">
-          <button class="btn btn--solid" type="button" data-export>Download .zip</button>
-          <button class="btn" type="button" data-copy-embed>Copy embed</button>
+          <button class="btn btn--solid" type="button" data-export data-i18n="panel.export">Download .zip</button>
+          <button class="btn" type="button" data-copy-embed data-i18n="panel.copyEmbed">Copy embed</button>
         </div>
         <details class="snippet">
-          <summary>Embed code</summary>
+          <summary data-i18n="panel.embed">Embed code</summary>
           <pre><code data-embed></code></pre>
         </details>
       </section>
@@ -142,5 +147,6 @@
   </main>
 
   <div class="toast" role="status" aria-live="polite" data-toast></div>
+  <script src="js/lang.js"></script>
 </body>
 </html>
