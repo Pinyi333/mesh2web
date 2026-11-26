@@ -13,7 +13,7 @@ First public version.
   compression, JSON + HTML reports, OBJ import, embed snippets. Node and
   browser entries.
 - **@mesh2web/cli**: `inspect`, `optimize`, `build [--watch]`, `init`,
-  `presets`; budgets with exit code 2; posters via headless Chromium.
+  `presets` (including `--json` for complete preset definitions); budgets with exit code 2; posters via headless Chromium.
 - **@mesh2web/element**: `<web-model>` with poster-first lazy loading
   (`lazy` / `eager` / `interaction`), adaptive quality and LOD selection,
   on-demand rendering, off-screen pause, five lighting presets, page-first
