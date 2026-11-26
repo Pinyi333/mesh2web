@@ -272,7 +272,14 @@ web-model img { width: 100%; height: 100%; object-fit: contain; }
 }
 .hero > .hud-dot { left: calc(var(--gutter) + 5%); top: clamp(110px, 18vh, 170px); }
 .hero__stage { grid-column: 1 / -1; grid-row: 1; position: relative; min-height: 44svh; margin: -3% 22% -2%; z-index: -1; }
-.hero__stage web-model { position: absolute; inset: 0; width: auto; height: auto; }
+.hero__video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  /* The loop is baked on #111112: lighten drops its backdrop into the panel,
+     and the radial mask hides any codec drift at the square's edge. */
+  mix-blend-mode: lighten;
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 66%, transparent 99%);
+  mask-image: radial-gradient(circle closest-side, #000 66%, transparent 99%);
+}
 .hero__stage::after { /* soft floor glow */
   content: ''; position: absolute; left: 20%; right: 20%; bottom: 6%; height: 18%;
   background: radial-gradient(closest-side, rgba(var(--accent-rgb), 0.14), transparent);
