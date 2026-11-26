@@ -46,8 +46,8 @@
       </div>
 
       <div class="compare" data-compare hidden>
-        <web-model class="compare__before" data-before alt="Original model" data-i18n-attr="alt:compare.beforeAlt" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
-        <web-model class="compare__after" data-after alt="Optimized model" data-i18n-attr="alt:compare.afterAlt" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
+        <web-model class="compare__before" data-before alt="Original model" data-i18n-attr="alt:compare.beforeAlt" ktx2-transcoder-path="vendor/basis/" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
+        <web-model class="compare__after" data-after alt="Optimized model" data-i18n-attr="alt:compare.afterAlt" ktx2-transcoder-path="vendor/basis/" loading="eager" quality="high" gesture="model-first" lighting="studio-soft"></web-model>
         <div class="compare__handle" data-handle role="slider" tabindex="0" aria-label="Before and after split" data-i18n-attr="aria-label:compare.handle" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
         <p class="compare__label compare__label--before"><span data-i18n="compare.before">Before</span><b data-label-before>—</b></p>
         <p class="compare__label compare__label--after"><span data-i18n="compare.after">After</span><b data-label-after data-i18n="step.optimizing">Optimizing…</b></p>
@@ -103,6 +103,14 @@
             </select>
           </div>
           <div class="field">
+            <label for="tex-format" data-i18n="panel.textureFormat">Texture format</label>
+            <select id="tex-format" data-texture-format aria-describedby="tex-format-hint">
+              <option value="webp" selected data-i18n="panel.formatWebp">WebP (smallest download)</option>
+              <option value="ktx2" data-i18n="panel.formatKtx2">KTX2 (~4× less GPU memory)</option>
+            </select>
+            <p class="hint" id="tex-format-hint" data-i18n="panel.formatHint">KTX2 stays compressed on the GPU; files are a little larger.</p>
+          </div>
+          <div class="field">
             <label for="geo" data-i18n="panel.geometry">Geometry</label>
             <select id="geo" data-geometry>
               <option value="meshopt" selected data-i18n="panel.geoMeshopt">Meshopt compression</option>
@@ -111,6 +119,7 @@
           </div>
           <label class="check"><input type="checkbox" data-lod checked> <span data-i18n="panel.lod">Generate LODs</span></label>
           <label class="check"><input type="checkbox" data-fit checked> <span data-i18n="panel.fit">Auto-fit triangle budget</span></label>
+          <label class="check"><input type="checkbox" data-ar> <span data-i18n="panel.ar">AR files for phones (Android + iPhone)</span></label>
         </details>
         <button class="btn btn--solid btn--wide" type="button" data-run disabled data-i18n="panel.run">Optimize</button>
       </section>

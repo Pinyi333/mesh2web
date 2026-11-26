@@ -26,11 +26,14 @@ ${c.bold('Optimize flags')}
       --ratio <0-1>         Target triangle ratio for simplification
       --no-simplify         Skip simplification
       --texture-size <px>   Max texture size
-      --texture-format <f>  webp | jpeg | png | keep
+      --texture-format <f>  webp | jpeg | png | ktx2 | keep    ${c.dim('(ktx2: GPU-compressed, ~4× less VRAM)')}
+      --texture-mode <m>    auto | etc1s | uastc              ${c.dim('(KTX2 only, default auto)')}
       --no-lod              Do not generate LOD files
       --max-size <KB>       Size budget (exit code 2 when exceeded)
       --max-triangles <n>   Triangle budget
+      --max-texture-memory <MB>  Texture GPU memory budget
       --no-fit              Do not auto-simplify to meet the triangle budget
+      --ar                  Also write <name>.ar.glb (+ .usdz with playwright-core) and an AR button
       --poster              Render <name>.webp with headless Chromium (needs playwright-core)
       --public-path <url>   URL prefix used in the generated embed snippet
       --json                Machine-readable output
@@ -50,6 +53,9 @@ const options = {
   'no-simplify': { type: 'boolean' },
   'texture-size': { type: 'string' },
   'texture-format': { type: 'string' },
+  'texture-mode': { type: 'string' },
+  'max-texture-memory': { type: 'string' },
+  ar: { type: 'boolean' },
   'no-lod': { type: 'boolean' },
   'max-size': { type: 'string' },
   'max-triangles': { type: 'string' },

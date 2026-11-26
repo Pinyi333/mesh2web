@@ -24,7 +24,7 @@ const ui = {
   issues: $('[data-issues]'), issuesCount: $('[data-issues-count]'), issuesWrap: $('[data-issues-wrap]'),
   presets: $$('[data-preset]'), presetDesc: $('[data-preset-desc]'),
   ratio: $('[data-ratio]'), ratioOut: $('[data-ratio-out]'), maxTris: $('[data-max-tris]'),
-  textureSize: $('[data-texture-size]'), geometry: $('[data-geometry]'), lod: $('[data-lod]'), fit: $('[data-fit]'),
+  textureSize: $('[data-texture-size]'), textureFormat: $('[data-texture-format]'), ar: $('[data-ar]'), geometry: $('[data-geometry]'), lod: $('[data-lod]'), fit: $('[data-fit]'),
   run: $('[data-run]'), lighting: $('[data-lighting]'), alt: $('[data-alt]'),
   result: $('[data-result]'), resultSize: $('[data-result-size]'), resultSaved: $('[data-result-saved]'),
   resultStats: $('[data-result-stats]'), budget: $('[data-budget]'),
@@ -179,7 +179,9 @@ function collectOptions() {
     preset: state.preset,
     simplify: Number(ui.ratio.value) >= 100 ? false : { ratio: Number(ui.ratio.value) / 100 },
     geometry: ui.geometry.value,
-    textures: ui.textureSize.value === 'keep' ? { format: 'keep' } : { maxSize: Number(ui.textureSize.value) },
+    textures: ui.textureSize.value === 'keep' && ui.textureFormat.value !== 'ktx2'
+      ? { format: 'keep' }
+      : { format: ui.textureFormat.value, ...(ui.textureSize.value === 'keep' ? {} : { maxSize: Number(ui.textureSize.value) }) },
     lod: ui.lod.checked ? preset.lod : [1],
     fitBudget: ui.fit.checked,
   };
@@ -197,7 +199,7 @@ async function runOptimize() {
   ui.run.disabled = true;
   const started = performance.now();
 
-  const stepLabels = ['clean', 'normals', 'simplify', 'fit-budget', 'textures', 'lod', 'compress'];
+  const stepLabels = ['clean', 'normals', 'simplify', 'fit-budget', 'textures', 'lod', 'compress', 'ar'];
   const onStep = (step) => {
     const name = step.split(':')[0];
     const key = name === 'fit-budget' ? 'simplify' : name;
@@ -210,7 +212,7 @@ async function runOptimize() {
   };
 
   try {
-    const output = await call({ type: 'optimize', options: collectOptions(), meta: { alt: ui.alt.value, lighting: ui.lighting.value } }, [], onStep);
+    const output = await call({ type: 'optimize', options: collectOptions(), meta: { alt: ui.alt.value, lighting: ui.lighting.value, ar: ui.ar.checked } }, [], onStep);
     state.output = output;
     const loaded = new Promise((resolve) => {
       ui.after.addEventListener('load', resolve, { once: true });
@@ -240,6 +242,7 @@ function showResult(report, elapsed) {
     [t('stat.triangles'), `${fmtNum(before.stats.triangles)} → ${fmtNum(after.stats.triangles)}`],
     [t('stat.drawCalls'), `${before.stats.drawCalls} → ${after.stats.drawCalls}`],
     [t('stat.textures'), `${fmtBytes(before.stats.textureBytes)} → ${fmtBytes(after.stats.textureBytes)}`],
+    ...(before.stats.textures.length ? [[t('stat.gpu'), `${fmtBytes(before.stats.textureGpuBytes)} → ${fmtBytes(after.stats.textureGpuBytes)}`]] : []),
     [t('stat.slow4g'), fmtMs(report.loadTimeMs['slow-4g'])],
     [t('stat.files'), report.outputs.map((o) => o.file.replace(`${report.name}.`, '')).join(' · ')],
   ]);
@@ -247,9 +250,11 @@ function showResult(report, elapsed) {
   ui.budget.textContent = report.budget.ok
     ? t('result.withinBudget')
     : t('result.overBudget', {
-      list: report.budget.violations.map((v) => (v.metric === 'size'
-        ? `${fmtBytes(v.actual)} > ${fmtBytes(v.limit)}`
-        : t('result.trisOver', { actual: fmtNum(v.actual), limit: fmtNum(v.limit) }))).join(', '),
+      list: report.budget.violations.map((v) => {
+        if (v.metric === 'size') return `${fmtBytes(v.actual)} > ${fmtBytes(v.limit)}`;
+        if (v.metric === 'texture-memory') return t('result.gpuOver', { actual: fmtBytes(v.actual), limit: fmtBytes(v.limit) });
+        return t('result.trisOver', { actual: fmtNum(v.actual), limit: fmtNum(v.limit) });
+      }).join(', '),
     });
   ui.embed.textContent = embedWithCurrentMeta();
 }
@@ -267,15 +272,27 @@ function embedWithCurrentMeta() {
    --------------------------------------------------------------------------- */
 async function exportZip() {
   if (!state.output) return;
-  const { report, glb, lods, reportHtml } = state.output;
+  const { report, glb, lods, arGlb, reportHtml } = state.output;
   const name = report.name;
   const entries = [
     { name: `${name}/${name}.glb`, data: glb },
     ...lods.map((l) => ({ name: `${name}/${l.file}`, data: l.glb })),
-    { name: `${name}/${name}.embed.html`, data: embedWithCurrentMeta() },
+    ...(arGlb ? [{ name: `${name}/${name}.ar.glb`, data: arGlb }] : []),
     { name: `${name}/${name}.report.html`, data: reportHtml },
     { name: `${name}/${name}.report.json`, data: JSON.stringify(report, null, 2) },
   ];
+  // USDZ for iOS AR Quick Look, from the optimized model (same exporter as <web-model>).
+  let embed = embedWithCurrentMeta();
+  if (arGlb) {
+    try {
+      entries.push({ name: `${name}/${name}.usdz`, data: new Uint8Array(await (await ui.after.exportUSDZ()).arrayBuffer()) });
+    } catch (err) {
+      // Without the file, <web-model> builds the USDZ on the visitor's iPhone instead.
+      console.warn('USDZ export failed', err);
+      embed = embed.replace(/\n\s*ios-src="[^"]*"/, '');
+    }
+  }
+  entries.push({ name: `${name}/${name}.embed.html`, data: embed });
   // Poster: snapshot the optimized model as currently framed and lit.
   const poster = await ui.after.snapshot('image/webp', 0.86);
   if (poster) {
@@ -384,7 +401,7 @@ function initControls() {
     });
   });
   ui.ratio.addEventListener('input', () => { ui.ratioOut.textContent = `${ui.ratio.value}%`; });
-  for (const el of [ui.ratio, ui.maxTris, ui.textureSize, ui.geometry, ui.lod, ui.fit]) el.addEventListener('change', runOptimize);
+  for (const el of [ui.ratio, ui.maxTris, ui.textureSize, ui.textureFormat, ui.geometry, ui.lod, ui.fit, ui.ar]) el.addEventListener('change', runOptimize);
 
   ui.lighting.addEventListener('change', () => {
     ui.before.lighting = ui.lighting.value;

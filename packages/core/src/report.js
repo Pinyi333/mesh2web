@@ -42,8 +42,8 @@ export function estimateLoadTime(bytes) {
 }
 
 /**
- * @param {{ bytes: number, triangles: number }} result
- * @param {{ maxSizeKB?: number, maxTriangles?: number }} [budget]
+ * @param {{ bytes: number, triangles: number, textureGpuBytes?: number }} result
+ * @param {{ maxSizeKB?: number, maxTriangles?: number, maxTextureMemoryMB?: number }} [budget]
  * @returns {BudgetResult}
  */
 export function checkBudget(result, budget = {}) {
@@ -53,6 +53,9 @@ export function checkBudget(result, budget = {}) {
   }
   if (budget.maxTriangles != null && result.triangles > budget.maxTriangles) {
     violations.push({ metric: 'triangles', limit: budget.maxTriangles, actual: result.triangles });
+  }
+  if (budget.maxTextureMemoryMB != null && (result.textureGpuBytes ?? 0) > budget.maxTextureMemoryMB * 1048576) {
+    violations.push({ metric: 'texture-memory', limit: budget.maxTextureMemoryMB * 1048576, actual: result.textureGpuBytes });
   }
   return { ok: violations.length === 0, violations };
 }
@@ -81,7 +84,7 @@ export function createReport({ name, preset, before, after, budget, outputs = []
       drawCalls: ratio(before.stats.drawCalls, after.stats.drawCalls),
     },
     loadTimeMs: estimateLoadTime(after.bytes),
-    budget: checkBudget({ bytes: after.bytes, triangles: after.stats.triangles }, budget),
+    budget: checkBudget({ bytes: after.bytes, triangles: after.stats.triangles, textureGpuBytes: after.stats.textureGpuBytes }, budget),
     outputs,
     createdAt: new Date().toISOString(),
   };
@@ -115,13 +118,14 @@ export function renderHtmlReport(report) {
     ['Draw calls', num(before.stats.drawCalls), num(after.stats.drawCalls), report.reduction.drawCalls],
     ['Materials', num(before.stats.materials), num(after.stats.materials), null],
     ['Textures', formatBytes(before.stats.textureBytes), formatBytes(after.stats.textureBytes), ratio(before.stats.textureBytes, after.stats.textureBytes)],
+    ['Texture GPU memory', formatBytes(before.stats.textureGpuBytes ?? 0), formatBytes(after.stats.textureGpuBytes ?? 0), ratio(before.stats.textureGpuBytes ?? 0, after.stats.textureGpuBytes ?? 0)],
   ];
   const issues = before.stats.issues.map((i) => `
       <li class="issue issue--${i.level}"><span class="issue__level">${i.level}</span>
         <div><p>${escapeHtml(i.message)}</p>${i.fix ? `<p class="issue__fix">${escapeHtml(i.fix)}</p>` : ''}</div></li>`).join('');
   const budget = report.budget.ok
     ? '<p class="budget budget--ok">Within budget</p>'
-    : `<p class="budget budget--fail">Over budget: ${report.budget.violations.map((v) => `${v.metric} ${v.metric === 'size' ? formatBytes(v.actual) : num(v.actual)} &gt; ${v.metric === 'size' ? formatBytes(v.limit) : num(v.limit)}`).join(', ')}</p>`;
+    : `<p class="budget budget--fail">Over budget: ${report.budget.violations.map((v) => `${v.metric} ${v.metric === 'triangles' ? num(v.actual) : formatBytes(v.actual)} &gt; ${v.metric === 'triangles' ? num(v.limit) : formatBytes(v.limit)}`).join(', ')}</p>`;
 
   return `<!doctype html>
 <html lang="en">

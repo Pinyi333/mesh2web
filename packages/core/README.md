@@ -26,9 +26,15 @@ await optimizeDocument(doc, { preset: 'product' }, { simplifier: MeshoptSimplifi
 
 Exports: `inspectDocument`, `optimizeDocument`, `optimizeWithLods`, `createLods`,
 `resolveOptions`, `addSmoothNormals`, `objToDocument`, `createReport`,
-`renderHtmlReport`, `checkBudget`, `estimateLoadTime`, `createEmbedSnippet`, and
-from `/node`: `readModel`, `writeGLB`, `createIO`, `inspectFile`, `optimizeFile`.
+`renderHtmlReport`, `checkBudget`, `estimateLoadTime`, `createEmbedSnippet`,
+`ktx2Textures`, `ktx2Settings`, `ktx2Size`, `estimateGpuBytes`, and
+from `/node`: `readModel`, `writeGLB`, `createIO`, `inspectFile`, `optimizeFile`
+(`ar: true` also writes an AR-ready GLB), and from `/browser`:
+`canvasTextureTransform`, `canvasKtx2Transform`.
 
-`sharp` is an optional dependency used for texture resizing and WebP in Node.
+`textures: { format: 'ktx2' }` encodes textures with the Basis Universal encoder
+(Apache-2.0) via [`ktx2-encoder`](https://github.com/gz65555/ktx2-encoder) (MIT).
+
+`sharp` is an optional dependency used for texture resizing, WebP and KTX2 in Node.
 
 MIT

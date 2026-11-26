@@ -2,7 +2,7 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { optimizeFile } from '@mesh2web/core/node';
 import { c, printReport } from '../format.js';
-import { renderPoster } from '../poster.js';
+import { renderPoster, renderUSDZ } from '../poster.js';
 
 /**
  * Optimize a single file and print the result. Shared by `optimize` and `build`.
@@ -12,6 +12,7 @@ import { renderPoster } from '../poster.js';
  * @param {string} [opts.publicPath]
  * @param {import('@mesh2web/core').OptimizeOptions} [opts.optimize]
  * @param {{ width?: number, format?: 'webp' | 'png' } | false} [opts.poster]
+ * @param {boolean} [opts.ar]
  * @param {boolean} [opts.json]
  * @returns {Promise<import('@mesh2web/core').Report>}
  */
@@ -24,6 +25,8 @@ export async function optimizeOne(input, opts) {
     outDir: opts.outDir ?? path.dirname(input),
     publicPath: opts.publicPath,
     optimize: opts.optimize,
+    // USDZ needs headless Chromium (same as posters); skipped quietly without it.
+    ar: opts.ar ? { usdz: (glb, usdz) => renderUSDZ(glb, usdz) } : false,
     onStep: (s) => steps.push(s),
     onWarn: (msg) => { if (!opts.json) console.warn(`\n  ${c.yellow('!')} ${msg}`); },
   });
@@ -57,6 +60,7 @@ export async function optimizeCommand(files, flags) {
       publicPath: flags['public-path'] || '',
       json: flags.json,
       poster: flags.poster ? { width: Number(flags['poster-width']) || 1200, format: 'webp' } : false,
+      ar: !!flags.ar,
       optimize: buildOptimizeOptions(flags),
     }));
   }
@@ -71,15 +75,24 @@ export function buildOptimizeOptions(flags) {
   if (flags.geometry) o.geometry = flags.geometry;
   if (flags['no-simplify']) o.simplify = false;
   else if (flags.ratio) o.simplify = { ratio: Number(flags.ratio) };
-  if (flags['texture-size'] || flags['texture-format']) {
+  if (flags['texture-size'] || flags['texture-format'] || flags['texture-mode']) {
     o.textures = {};
     if (flags['texture-size']) o.textures.maxSize = Number(flags['texture-size']);
-    if (flags['texture-format']) o.textures.format = flags['texture-format'];
+    if (flags['texture-format']) {
+      const format = flags['texture-format'];
+      if (!['webp', 'jpeg', 'png', 'ktx2', 'keep'].includes(format)) throw new Error(`Unknown --texture-format "${format}". Use webp, jpeg, png, ktx2 or keep.`);
+      o.textures.format = format;
+    }
+    if (flags['texture-mode']) {
+      if (!['auto', 'etc1s', 'uastc'].includes(flags['texture-mode'])) throw new Error(`Unknown --texture-mode "${flags['texture-mode']}". Use auto, etc1s or uastc.`);
+      o.textures.mode = flags['texture-mode'];
+    }
   }
   if (flags['no-lod']) o.lod = [1];
   const budget = {};
   if (flags['max-size']) budget.maxSizeKB = Number(flags['max-size']);
   if (flags['max-triangles']) budget.maxTriangles = Number(flags['max-triangles']);
+  if (flags['max-texture-memory']) budget.maxTextureMemoryMB = Number(flags['max-texture-memory']);
   if (Object.keys(budget).length) o.budget = budget;
   if (flags['no-fit']) o.fitBudget = false;
   return o;

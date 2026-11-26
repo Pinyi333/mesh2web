@@ -30,6 +30,7 @@ function buildFile(config, baseDir, file, json) {
     publicPath: [merged.publicPath || '', rel].filter(Boolean).join('/'),
     json,
     poster: merged.poster ?? false,
+    ar: !!merged.ar,
     optimize: {
       preset: merged.preset,
       simplify: merged.simplify,

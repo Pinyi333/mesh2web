@@ -13,7 +13,9 @@ import { optimizePresets, DEFAULT_OPTIMIZE_PRESET } from '@mesh2web/presets';
  * @property {string} [preset]  `hero` | `product` | `ambient`
  * @property {{ ratio?: number, error?: number } | false} [simplify]
  * @property {'meshopt' | 'draco' | 'none'} [geometry]
- * @property {{ format?: 'webp' | 'png' | 'jpeg' | 'keep', maxSize?: number, quality?: number } | false} [textures]
+ * @property {{ format?: 'webp' | 'png' | 'jpeg' | 'ktx2' | 'keep', maxSize?: number, quality?: number, mode?: 'auto' | 'etc1s' | 'uastc' } | false} [textures]
+ *           `ktx2` keeps textures compressed on the GPU (Basis Universal); `mode` picks
+ *           ETC1S/UASTC per texture (`auto`) or forces one.
  * @property {number[]} [lod]   Ratios relative to the optimized model, e.g. [1, 0.5, 0.2].
  * @property {{ maxSizeKB?: number, maxTriangles?: number }} [budget]
  * @property {boolean} [fitBudget]  Keep simplifying (with a looser error bound) until
@@ -24,6 +26,11 @@ import { optimizePresets, DEFAULT_OPTIMIZE_PRESET } from '@mesh2web/presets';
  * @property {any} [encoder]      MeshoptEncoder (from `meshoptimizer`).
  * @property {(opts: NonNullable<OptimizeOptions['textures']>) => Transform | null} [textureTransform]
  *           Environment-specific texture step (sharp in Node, canvas in the browser).
+ * @property {(opts: NonNullable<OptimizeOptions['textures']>) => Transform | null} [ktx2Transform]
+ *           Environment-specific KTX2 step, used when `textures.format` is `ktx2`.
+ * @property {(doc: Document) => void | Promise<void>} [beforeTextures]
+ *           Called with the cleaned, simplified document right before the texture
+ *           step (used to fork the AR variant, which needs PNG/JPEG textures).
  * @property {(step: string) => void} [onStep]
  */
 
@@ -159,10 +166,14 @@ export async function optimizeDocument(doc, options = {}, deps = {}) {
     }
   }
 
-  if (opts.textures && opts.textures.format !== 'keep' && deps.textureTransform) {
-    const transform = deps.textureTransform(opts.textures);
+  await deps.beforeTextures?.(doc);
+
+  if (opts.textures && opts.textures.format !== 'keep') {
+    const ktx2 = opts.textures.format === 'ktx2';
+    const factory = ktx2 ? deps.ktx2Transform : deps.textureTransform;
+    const transform = factory?.(opts.textures);
     if (transform) {
-      step('textures');
+      step(ktx2 ? 'textures:ktx2' : 'textures');
       await doc.transform(transform);
     }
   }

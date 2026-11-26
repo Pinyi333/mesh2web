@@ -7,16 +7,17 @@
  * @param {string[]} [o.lods]       Lower-detail variants, highest first.
  * @param {string} [o.lighting]
  * @param {string} [o.cdn]          Script URL for the element.
+ * @param {{ src?: string, iosSrc?: string }} [o.ar]  Enable the AR button.
  */
 export function createEmbedSnippet({
-  src, poster, alt = '3D model', lods = [], lighting = 'studio-soft',
+  src, poster, alt = '3D model', lods = [], lighting = 'studio-soft', ar,
   cdn = 'https://cdn.jsdelivr.net/npm/@mesh2web/element/dist/web-model.js',
 }) {
   const attr = (name, value) => (value ? `\n  ${name}="${String(value).replace(/"/g, '&quot;')}"` : '');
   return `<script type="module" src="${cdn}"></script>
 
 <web-model${attr('src', src)}${attr('lod-src', lods.join(' '))}${attr('poster', poster)}${attr('alt', alt)}${attr('lighting', lighting)}
-  controls="orbit"
+  controls="orbit"${ar ? `\n  ar${attr('ar-src', ar.src)}${attr('ios-src', ar.iosSrc)}` : ''}
   autorotate
   loading="lazy"
 ></web-model>

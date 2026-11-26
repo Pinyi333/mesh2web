@@ -11,9 +11,9 @@ const run = promisify(execFile);
 const bin = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/bin.js');
 
 /** Run the CLI and resolve with { code, stdout, stderr } instead of throwing. */
-async function cli(args, cwd) {
+async function cli(args, cwd, env = {}) {
   try {
-    const { stdout, stderr } = await run(process.execPath, [bin, ...args], { cwd, env: { ...process.env, NO_COLOR: '1' } });
+    const { stdout, stderr } = await run(process.execPath, [bin, ...args], { cwd, env: { ...process.env, NO_COLOR: '1', ...env } });
     return { code: 0, stdout, stderr };
   } catch (err) {
     return { code: err.code, stdout: err.stdout, stderr: err.stderr };
@@ -36,6 +36,28 @@ function sphereObj(seg = 64) {
     }
   }
   return lines.join('\n');
+}
+
+/** A textured quad GLB (noise texture, so `prune` keeps it). */
+async function texturedGlb(size = 512) {
+  const { Document } = await import('@gltf-transform/core');
+  const { createIO } = await import('@mesh2web/core/node');
+  const sharp = (await import('sharp')).default;
+  const data = Buffer.alloc(size * size * 3);
+  for (let i = 0; i < data.length; i++) data[i] = (i * 2654435761) % 251;
+  const png = await sharp(data, { raw: { width: size, height: size, channels: 3 } }).png().toBuffer();
+  const doc = new Document();
+  const buffer = doc.createBuffer();
+  const acc = (type, arr) => doc.createAccessor().setType(type).setArray(arr).setBuffer(buffer);
+  const texture = doc.createTexture('tile').setImage(new Uint8Array(png)).setMimeType('image/png');
+  const prim = doc.createPrimitive()
+    .setAttribute('POSITION', acc('VEC3', new Float32Array([-1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1])))
+    .setAttribute('NORMAL', acc('VEC3', new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0])))
+    .setAttribute('TEXCOORD_0', acc('VEC2', new Float32Array([0, 0, 1, 0, 1, 1, 0, 1])))
+    .setIndices(acc('SCALAR', new Uint16Array([0, 2, 1, 0, 3, 2])))
+    .setMaterial(doc.createMaterial('tile').setBaseColorTexture(texture).setMetallicFactor(0));
+  doc.createScene().addChild(doc.createNode('tile').setMesh(doc.createMesh('tile').addPrimitive(prim)));
+  return (await createIO()).writeBinary(doc);
 }
 
 let dir;
@@ -102,6 +124,34 @@ describe('mesh2web CLI', () => {
     expect(stdout).toContain('1 model(s) built');
     const embed = await readFile(path.join(project, 'public/3d/ball.embed.html'), 'utf8');
     expect(embed).toContain('src="/3d/ball.glb"');
+  });
+
+  it('compresses textures to KTX2 with clean --json output and a texture-memory budget', async () => {
+    const input = path.join(dir, 'tile.glb');
+    await writeFile(input, await texturedGlb());
+    const out = path.join(dir, 'ktx2');
+    // No Chromium here on purpose: USDZ is skipped and the embed falls back to
+    // building it in the browser. (Otherwise CI runners with a system Chrome
+    // would render it, which is slow and covered by the e2e suite.)
+    const noChromium = { MESH2WEB_CHROMIUM: path.join(dir, 'no-chromium') };
+    const ok = await cli(['optimize', input, '-o', out, '--texture-format', 'ktx2', '--texture-size', '256', '--no-lod', '--ar', '--json'], undefined, noChromium);
+    expect(ok.code).toBe(0);
+    const report = JSON.parse(ok.stdout); // the Basis encoder must not print to stdout
+    expect(report.after.stats.textures[0].mimeType).toBe('image/ktx2');
+    expect(report.outputs.map((o) => o.file)).toEqual(expect.arrayContaining(['tile.glb', 'tile.ar.glb']));
+    const embed = await readFile(path.join(out, 'tile.embed.html'), 'utf8');
+    expect(embed).toContain('ar-src="tile.ar.glb"');
+    expect(embed).not.toContain('ios-src'); // no USDZ was written
+
+    const over = await cli(['optimize', input, '-o', path.join(dir, 'ktx2b'), '--texture-format', 'ktx2', '--no-lod', '--max-texture-memory', '0.01']);
+    expect(over.code).toBe(2);
+    expect(over.stdout).toContain('Over budget: texture-memory');
+  });
+
+  it('rejects unknown texture formats', async () => {
+    const { code, stderr } = await cli(['optimize', path.join(dir, 'sphere.obj'), '--texture-format', 'avif']);
+    expect(code).toBe(1);
+    expect(stderr).toMatch(/texture-format/);
   });
 
   it('fails clearly on unsupported input', async () => {
