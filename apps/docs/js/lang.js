@@ -30,16 +30,12 @@ window.mesh2webI18n?.register({
     'nav.usage': '用法',
 
     'hero.eyebrow': '開源 · MIT 授權 · 不需要框架',
-    'hero.titleA': '<span class="hero__paren">（</span>任何<span class="hero__paren">）</span><span class="hero__gap"> </span>3D 模型',
-    'hero.metaIssue': 'N°01 — 3D → 網頁',
-    'hero.titleB': '直接上網頁',
-    'hero.hudAria': '實測數據',
-    'hero.hudLabel': '優化後',
-    'hero.orb': '開啟<br>Studio',
+    'hero.title': '任何&nbsp;3D&nbsp;模型<br>一行指令<br><em>直接上網頁</em>',
     'hero.lead': 'mesh2web 會幫模型健檢、清理、減面與壓縮，再用輕量的 <code>&lt;web-model&gt;</code> 元件放上網頁，為滾動敘事與 GSAP 而設計。',
     'hero.studio': '在瀏覽器試用 Studio <span aria-hidden="true">→</span>',
-    'hero.modelAlt': '厚實的液態鉻金屬環，孔洞與標題文字前後穿插',
-    'hero.render': '鉻面習作 · Blender Cycles 渲染',
+    'hero.modelAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶，緩緩旋轉',
+    'hero.posterAlt': '奶油色陶瓷雕塑，外圍環繞一條細金色緞帶',
+    'hero.drag': '拖曳旋轉',
     'hero.stats': '219 KB · 5.2 萬面',
     'hero.scroll': '往下捲',
 
@@ -62,7 +58,6 @@ window.mesh2webI18n?.register({
     'story.ship.title': '上線',
     'story.ship.body': '產出 poster、嵌入碼，以及只有 4 KB 的元件：模型捲進畫面時才延遲載入 three.js。',
 
-    'features.mega': '元件',
     'features.eyebrow': '&lt;web-model&gt; 元件',
     'features.title': '寫 HTML 就搞定九成，<br>其餘交給 JS&nbsp;API。',
     'features.poster.title': 'Poster 優先',

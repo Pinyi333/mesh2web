@@ -45,7 +45,6 @@ function init() {
   initSplitTitles();          // section titles: line mask reveal
   initReveals();              // [data-reveal] generic entrances
   initHeroParallax();         // hero model drifts on scroll
-  initNavSpy();               // pill nav highlights the current section
 
   gsap.matchMedia().add('(hover: hover) and (pointer: fine)', () => {
     initMagnetic();           // magnetic buttons (desktop only)
@@ -93,31 +92,22 @@ function initSmoothScroll() {
 }
 
 /* --------------------------------------------------------------------------
-   Preloader: counter follows the hero chrome layers decoding
+   Preloader: counter follows the hero model's real download progress
    -------------------------------------------------------------------------- */
-// The chrome layers are CSS backgrounds (so each hero proposal loads only its
-// own pair); decode the same URLs here to know when the first paint is real.
-function heroLayersReady() {
-  const urls = [...document.querySelectorAll('.hero__layer')]
-    .map((el) => /url\(["']?([^"')]+)["']?\)/.exec(getComputedStyle(el).backgroundImage)?.[1])
-    .filter(Boolean);
-  return urls.map((src) => { const img = new Image(); img.src = src; return img.decode().catch(() => {}); });
-}
-
 function initPreloader() {
   const pre = document.querySelector('.preloader');
   if (!pre) { initHeroReveal(); return; }
   const countEl = pre.querySelector('[data-count]');
+  const model = document.getElementById('hero-model');
   const state = { shown: 0, target: 0 };
   html.classList.add('is-loading');
   lenis?.stop();
 
   const setTarget = (v) => { state.target = Math.max(state.target, v); };
-  const layers = heroLayersReady();
-  layers.forEach((p) => p.then(() => setTarget(state.target + 92 / layers.length)));
-  // Never block for long: a missing layer just leaves the type on its own.
-  const layersDone = Promise.race([
-    Promise.all(layers),
+  model?.addEventListener('progress', (e) => setTarget(e.detail.progress * 92));
+  // Never block on the model: poster is already a complete first paint.
+  const modelDone = Promise.race([
+    model?.ready ?? Promise.resolve(),
     new Promise((r) => setTimeout(r, 4000)),
   ]);
   const minTime = new Promise((r) => setTimeout(r, CONFIG.preloader.min * 1000));
@@ -127,10 +117,10 @@ function initPreloader() {
     countEl.textContent = String(Math.round(state.shown)).padStart(2, '0');
   };
   gsap.ticker.add(tick);
-  // Gentle fake progress until the layers decode (cached loads finish at once).
+  // Gentle fake progress until real bytes arrive (cached loads skip events).
   gsap.to(state, { target: 60, duration: CONFIG.preloader.min, ease: 'power1.out' });
 
-  Promise.all([layersDone, minTime]).then(() => {
+  Promise.all([modelDone, minTime]).then(() => {
     setTarget(100);
     gsap.timeline({ onComplete: () => { gsap.ticker.remove(tick); pre.remove(); } })
       .to(state, { shown: 100, duration: 0.35, ease: 'power2.out', onUpdate: () => { countEl.textContent = '100'; } })
@@ -141,66 +131,34 @@ function initPreloader() {
 }
 
 /* --------------------------------------------------------------------------
-   Hero: words reveal + fades + chrome rise
-   Both chrome layers ([data-hero-model]) always get identical transforms so the
-   front layer stays registered on the back one; only the type moves on its own.
+   Hero: masked line reveal + fades + model rise
    -------------------------------------------------------------------------- */
 function initHeroReveal() {
   const title = document.querySelector('.hero__title');
-  const poster = html.dataset.hero === 'poster';
   const tl = gsap.timeline();
-  if (title) {
-    const words = title.querySelectorAll('.hero__word');
+  if (title && window.SplitText) {
+    const split = new SplitText(title, { type: 'lines', linesClass: 'line', mask: 'lines' });
     gsap.set(title, { visibility: 'visible' });
-    tl.from(words, poster
-      // Poster: the lines rise into their rules.
-      ? { yPercent: 110, duration: CONFIG.hero.duration, ease: CONFIG.ease.strong, stagger: CONFIG.hero.stagger }
-      // Words slide out from the centre towards their brackets.
-      : { xPercent: (i) => (i ? -40 : 40), opacity: 0, filter: 'blur(8px)',
-          duration: CONFIG.hero.duration, ease: CONFIG.ease.strong, stagger: CONFIG.hero.stagger });
+    tl.from(split.lines, { yPercent: 115, duration: CONFIG.hero.duration, ease: CONFIG.ease.strong, stagger: CONFIG.hero.stagger });
+  } else if (title) {
+    gsap.set(title, { visibility: 'visible' });
   }
   tl.fromTo('[data-hero-fade]', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: CONFIG.ease.out, stagger: 0.08 }, 0.35)
-    .from('[data-hero-model]', { y: 90, scale: 0.92, rotate: -4, opacity: 0, duration: 1.8, ease: CONFIG.ease.expo }, 0.1);
+    .from('[data-hero-model]', { y: 80, opacity: 0, duration: 1.6, ease: CONFIG.ease.expo }, 0.1);
+
+  const model = document.getElementById('hero-model');
+  // Swing the camera into place once the model is ready: a quiet "hello".
+  model?.ready.then(() => {
+    gsap.from(model.camera, { azimuth: -110, distance: 4.6, duration: 2.4, ease: CONFIG.ease.expo });
+  });
 }
 
 function initHeroParallax() {
-  // Desktop only: on mobile the form sits above the copy and must not drift onto it.
+  // Desktop only: on mobile the model sits above the copy and must not drift onto it.
   gsap.matchMedia().add('(min-width: 901px)', () => {
     gsap.to('[data-hero-model]', {
-      yPercent: 10, ease: 'none',
+      yPercent: 14, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
-    });
-  });
-  // Pointer parallax: chrome (both layers, one offset) against the type.
-  gsap.matchMedia().add('(min-width: 901px) and (hover: hover) and (pointer: fine)', () => {
-    const hero = document.querySelector('.hero');
-    const layers = gsap.utils.toArray('.hero__layer');
-    const title = document.querySelector('.hero__title');
-    if (!hero || !layers.length) return;
-    const lx = gsap.quickTo(layers, 'x', { duration: 1.1, ease: 'power3.out' });
-    const ly = gsap.quickTo(layers, 'y', { duration: 1.1, ease: 'power3.out' });
-    const tx = gsap.quickTo(title, 'x', { duration: 1.4, ease: 'power3.out' });
-    const move = (e) => {
-      const r = hero.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / r.width - 0.5;
-      const ny = (e.clientY - r.top) / r.height - 0.5;
-      lx(nx * 28); ly(ny * 18); tx(nx * -10);
-    };
-    hero.addEventListener('pointermove', move);
-    return () => { hero.removeEventListener('pointermove', move); gsap.set([...layers, title], { x: 0, y: 0 }); };
-  });
-}
-
-/* --------------------------------------------------------------------------
-   Nav spy: the section in view gets the signal-orange pill
-   -------------------------------------------------------------------------- */
-function initNavSpy() {
-  document.querySelectorAll('.nav__links a[href^="#"]').forEach((link) => {
-    const target = document.querySelector(link.getAttribute('href'));
-    if (!target) return;
-    ScrollTrigger.create({
-      trigger: target, start: 'top 55%', end: 'bottom 55%',
-      onToggle: (self) => (self.isActive ? link.setAttribute('aria-current', 'true') : link.removeAttribute('aria-current')),
     });
   });
 }
