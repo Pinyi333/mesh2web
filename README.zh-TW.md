@@ -278,7 +278,7 @@ scrollModel(gsap, model, {
 
 ## Studio
 
-[pinyi333.github.io/mesh2web/studio](https://pinyi333.github.io/mesh2web/studio/)：拖入 GLB、glTF（連同 .bin 與貼圖）或 OBJ。Studio 會做健檢，讓你選 preset 或微調參數，並以同步相機的左右分割畫面比對處理前後。最後匯出 zip，內含 GLB、LOD、poster、嵌入碼和報告。所有處理都在你電腦上的 Web Worker 完成。
+[pinyi333.github.io/mesh2web/studio](https://pinyi333.github.io/mesh2web/studio/)：拖入 GLB、glTF（連同 .bin 與貼圖）或 OBJ。Studio 會做健檢，讓你選 preset 或微調參數，並以同步相機的左右分割畫面比對處理前後。最後匯出 zip，內含 GLB、LOD、poster、嵌入碼和報告。在「微調」裡可以把貼圖改成 KTX2，也可以把 AR 檔（`.ar.glb` 與 `.usdz`）一起加進 zip。所有處理都在你電腦上的 Web Worker 完成。
 
 ## 範例
 
@@ -329,7 +329,7 @@ mesh2web 建立在 glTF-Transform 與 meshoptimizer 之上，和 `<model-viewer>
 - [x] Studio：瀏覽器內優化、分割對照、zip 匯出
 - [x] KTX2／Basis 貼圖壓縮、貼圖 GPU 記憶體預算
 - [x] AR：Scene Viewer 與 Quick Look，輸出 USDZ
-- [ ] Studio 加上 KTX2 與 AR 選項
+- [x] Studio 加上 KTX2 與 AR 選項
 - [ ] 頁面內 WebXR AR
 - [ ] 過度減面時以 SSIM 視覺差異提出警告
 - [ ] WebGPU 渲染器、Blender 外掛、AI 生成網格的自動修復

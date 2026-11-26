@@ -278,7 +278,7 @@ Step-by-step guides for **Three.js**, **Webflow**, **Framer** and **WordPress** 
 
 ## Studio
 
-[pinyi333.github.io/mesh2web/studio](https://pinyi333.github.io/mesh2web/studio/): drop a GLB, glTF (with its files) or OBJ. Studio runs a health check, lets you pick a preset or fine-tune it, and compares before and after in a split view with a synced camera. It exports a zip with the GLB, LODs, a poster, the embed code and a report. Everything runs in a Web Worker on your machine.
+[pinyi333.github.io/mesh2web/studio](https://pinyi333.github.io/mesh2web/studio/): drop a GLB, glTF (with its files) or OBJ. Studio runs a health check, lets you pick a preset or fine-tune it, and compares before and after in a split view with a synced camera. It exports a zip with the GLB, LODs, a poster, the embed code and a report. Under *Fine-tune* you can switch textures to KTX2 and add AR files (`.ar.glb` + `.usdz`) to the zip. Everything runs in a Web Worker on your machine.
 
 ## Examples
 
@@ -329,7 +329,7 @@ mesh2web is built on glTF-Transform and meshoptimizer, and sits next to `<model-
 - [x] Studio: in-browser optimization, split compare, zip export
 - [x] KTX2 / Basis texture compression, texture GPU-memory budget
 - [x] AR: Scene Viewer + Quick Look, USDZ output
-- [ ] KTX2 and AR toggles in Studio
+- [x] KTX2 and AR options in Studio
 - [ ] In-page WebXR AR
 - [ ] SSIM visual-diff warnings for over-simplification
 - [ ] WebGPU renderer, Blender add-on, auto-repair for AI-generated meshes

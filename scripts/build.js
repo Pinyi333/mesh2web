@@ -73,6 +73,8 @@ await cp(path.join(root, 'node_modules/lenis/dist/lenis.min.js'), path.join(lib,
 await cp(path.join(root, 'packages/presets/src/optimize.json'), path.join(root, 'apps/studio/vendor/presets.json'));
 // Basis Universal encoder for Studio's KTX2 option (fetched only when used).
 await cp(path.join(root, 'node_modules/ktx2-encoder/dist/basis/basis_encoder.wasm'), path.join(root, 'apps/studio/vendor/basis_encoder.wasm'));
+// Self-hosted KTX2 transcoder so Studio previews KTX2 output without a CDN.
+await cp(path.join(root, 'node_modules/three/examples/jsm/libs/basis'), path.join(root, 'apps/studio/vendor/basis'), { recursive: true });
 
 for (const app of ['apps/docs', 'apps/studio']) {
   try {

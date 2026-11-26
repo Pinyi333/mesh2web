@@ -5,6 +5,7 @@
  *   2. exportUSDZ() returns a valid USDZ archive (what iOS Quick Look receives)
  *   3. on Android the AR button opens Scene Viewer with an absolute model URL
  *   4. on desktop the AR button stays hidden
+ *   5. Studio: KTX2 + AR options produce KTX2 output, AR GLB and USDZ in the zip
  * Requires `npm run build`. Set MESH2WEB_CHROMIUM to use a specific Chromium.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -124,6 +125,47 @@ await test('AR: button stays hidden on desktop', async (tab) => {
   const hidden = await tab.evaluate(() => document.querySelector('web-model').shadowRoot.querySelector('[part="ar-button"]').hidden);
   if (!hidden) throw new Error('AR button visible on desktop');
 });
+
+// Studio runs its own page, so it does not use the shared `test` helper.
+{
+  const name = 'Studio: KTX2 + AR export';
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true, locale: 'en-US' });
+  const tab = await context.newPage();
+  const errors = [];
+  tab.on('pageerror', (e) => errors.push(e.message));
+  tab.on('console', (m) => { if (m.type() === 'error' && !/fonts\.g|Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  const started = Date.now();
+  try {
+    await tab.goto(`http://127.0.0.1:${PORT}/apps/studio/?lang=en`);
+    await tab.click('[data-sample]');
+    await tab.waitForSelector('[data-result]:not([hidden])', { timeout: 180000 });
+    await tab.click('.advanced summary');
+    await tab.selectOption('[data-texture-format]', 'ktx2');
+    await tab.check('[data-ar]');
+    await tab.waitForFunction(() => document.querySelector('[data-embed]').textContent.includes('ar-src='), null, { timeout: 180000 });
+    await tab.waitForFunction(() => document.querySelector('[data-after]').dataset.state === 'loaded', null, { timeout: 60000 });
+    const stats = await tab.textContent('[data-result-stats]');
+    if (!/GPU memory/.test(stats)) throw new Error(`no GPU memory row: ${stats}`);
+    const compressed = await tab.evaluate(() => {
+      let ok = false;
+      document.querySelector('[data-after]').viewer.model.traverse((o) => { if (o.material?.map?.isCompressedTexture) ok = true; });
+      return ok;
+    });
+    if (!compressed) throw new Error('Studio preview did not get KTX2 textures');
+    const [download] = await Promise.all([tab.waitForEvent('download', { timeout: 60000 }), tab.click('[data-export]')]);
+    const zip = (await import('node:fs')).readFileSync(await download.path()).toString('latin1');
+    for (const file of ['sample-knot.ar.glb', 'sample-knot.usdz', 'sample-knot.embed.html']) {
+      if (!zip.includes(file)) throw new Error(`zip is missing ${file}`);
+    }
+    if (errors.length) throw new Error(errors.join('\n'));
+    console.log(`✓ ${name} (${Date.now() - started} ms)`);
+  } catch (err) {
+    failures++;
+    console.error(`✗ ${name}\n  ${err.message}`);
+  } finally {
+    await context.close();
+  }
+}
 
 await browser.close();
 server.close();

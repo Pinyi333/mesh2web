@@ -17,6 +17,8 @@ First public version.
   (`ar-src`, `ios-src`, `ar-placement`, `ar-scale`, `activateAR()`,
   `exportUSDZ()`, `ar-status` event). `mesh2web optimize --ar` / `"ar": true`
   writes `name.ar.glb` (Draco + PNG/JPEG) and `name.usdz`.
+- **Studio**: texture format (WebP / KTX2) and "AR files" options; the zip
+  then includes `name.ar.glb` and `name.usdz`, and the stats show GPU memory.
 
 - **@mesh2web/core**: inspect (health check with fixes), clean (dedup, flatten,
   weld, smooth normals, join, prune), meshoptimizer simplification with

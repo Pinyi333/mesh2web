@@ -12,6 +12,7 @@ import { ktx2Textures } from './ktx2.js';
 export * from './index.js';
 export { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier };
 export { Document, Logger } from '@gltf-transform/core';
+export { cloneDocument } from '@gltf-transform/functions';
 
 /** @returns {Promise<WebIO>} */
 export async function createWebIO() {

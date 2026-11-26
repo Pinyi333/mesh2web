@@ -4,14 +4,14 @@
  *
  * Messages in:  { id, type: 'load', files: [{ name, buffer }] }
  *               { id, type: 'sample' }
- *               { id, type: 'optimize', options, meta: { alt, lighting } }
+ *               { id, type: 'optimize', options, meta: { alt, lighting, ar } }
  * Messages out: { id, type: 'step', step }
  *               { id, type: 'loaded', name, bytes, stats, previewGlb }
- *               { id, type: 'optimized', report, glb, lods, embed, reportHtml }
+ *               { id, type: 'optimized', report, glb, lods, arGlb?, embed, reportHtml }
  *               { id, type: 'error', message }
  */
 import {
-  Document, Logger, createWebIO, inspectDocument, objToDocument, optimizeWithLods, resolveOptions,
+  Document, Logger, cloneDocument, createWebIO, inspectDocument, objToDocument, optimizeWithLods, resolveOptions,
   createReport, renderHtmlReport, createEmbedSnippet, canvasTextureTransform, canvasKtx2Transform,
   MeshoptEncoder, MeshoptSimplifier,
 } from '../vendor/core.js';
@@ -88,12 +88,15 @@ async function optimize(id, options, meta = {}) {
   const before = { bytes: source.bytes, stats: inspectDocument(doc) };
   const resolved = resolveOptions(options);
 
+  let arSource = null;
   const { lods } = await optimizeWithLods(doc, options, {
     simplifier: MeshoptSimplifier,
     encoder: MeshoptEncoder,
     textureTransform: canvasTextureTransform,
     // Basis Universal encoder WASM, copied next to core.js by scripts/build.js.
     ktx2Transform: (t) => canvasKtx2Transform(t, { wasmUrl: new URL('../vendor/basis_encoder.wasm', import.meta.url).href }),
+    // AR variant: forked before the texture step so it keeps PNG/JPEG.
+    beforeTextures: meta.ar ? (d) => { arSource = cloneDocument(d); } : undefined,
     onStep: (step) => post({ id, type: 'step', step }),
   });
 
@@ -108,14 +111,26 @@ async function optimize(id, options, meta = {}) {
     lodFiles.push({ file, glb: bytes });
     outputs.push({ file, bytes: bytes.byteLength, triangles: inspectDocument(lod.doc).triangles });
   }
+  let arGlb = null;
+  if (arSource) {
+    post({ id, type: 'step', step: 'ar' });
+    // Scene Viewer reads plain glTF: PNG/JPEG textures, no Meshopt or KTX2.
+    // (Draco encoding is Node-only, so the browser keeps geometry uncompressed.)
+    const textures = resolved.textures || {};
+    const transform = canvasTextureTransform({ format: 'jpeg', maxSize: textures.maxSize || 2048, quality: textures.quality || 85 });
+    if (transform) await arSource.transform(transform);
+    arGlb = await io.writeBinary(arSource);
+    outputs.push({ file: `${name}.ar.glb`, bytes: arGlb.byteLength, triangles: inspectDocument(arSource).triangles });
+  }
   const report = createReport({ name, preset: resolved.preset, before, after, budget: resolved.budget, outputs });
   const embed = createEmbedSnippet({
     src: `${name}.glb`, lods: lodFiles.map((l) => l.file), poster: `${name}.webp`,
     alt: meta.alt || name, lighting: meta.lighting || 'studio-soft',
+    ar: arGlb ? { src: `${name}.ar.glb`, iosSrc: `${name}.usdz` } : undefined,
   });
   post(
-    { id, type: 'optimized', report, glb, lods: lodFiles, embed, reportHtml: renderHtmlReport(report) },
-    [glb.buffer, ...lodFiles.map((l) => l.glb.buffer)],
+    { id, type: 'optimized', report, glb, lods: lodFiles, arGlb, embed, reportHtml: renderHtmlReport(report) },
+    [glb.buffer, ...lodFiles.map((l) => l.glb.buffer), ...(arGlb ? [arGlb.buffer] : [])],
   );
 }
 

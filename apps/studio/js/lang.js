@@ -28,6 +28,7 @@ window.mesh2webI18n?.register({
     'step.textures': 'Resizing textures',
     'step.lod': 'Building LODs',
     'step.compress': 'Compressing',
+    'step.ar': 'Building AR files',
 
     'stat.size': 'Size',
     'stat.triangles': 'Triangles',
@@ -35,6 +36,7 @@ window.mesh2webI18n?.register({
     'stat.textures': 'Textures',
     'stat.slow4g': 'Slow 4G',
     'stat.files': 'Files',
+    'stat.gpu': 'GPU memory',
 
     'issues.none': 'No issues found.',
     'panel.altExample': 'e.g. {name}',
@@ -44,6 +46,7 @@ window.mesh2webI18n?.register({
     'result.withinBudget': 'Within budget',
     'result.overBudget': 'Over budget: {list}',
     'result.trisOver': '{actual} > {limit} tris',
+    'result.gpuOver': 'GPU memory {actual} > {limit}',
   },
   'zh-TW': {
     'lang.switch.label': 'EN',
@@ -76,6 +79,11 @@ window.mesh2webI18n?.register({
     'panel.maxTris': '面數預算',
     'panel.texture': '貼圖最大尺寸',
     'panel.textureKeep': '維持原尺寸',
+    'panel.textureFormat': '貼圖格式',
+    'panel.formatWebp': 'WebP（下載最小）',
+    'panel.formatKtx2': 'KTX2（GPU 記憶體約少 4 倍）',
+    'panel.formatHint': 'KTX2 在 GPU 上維持壓縮，檔案會稍大一些。',
+    'panel.ar': '產生手機 AR 檔（Android 與 iPhone）',
     'panel.geometry': '幾何壓縮',
     'panel.geoMeshopt': 'Meshopt 壓縮',
     'panel.geoNone': '只做量化',
@@ -111,6 +119,7 @@ window.mesh2webI18n?.register({
     'step.textures': '正在縮放貼圖',
     'step.lod': '正在產生 LOD',
     'step.compress': '壓縮中',
+    'step.ar': '正在產生 AR 檔',
 
     'stat.size': '大小',
     'stat.triangles': '面數',
@@ -118,6 +127,7 @@ window.mesh2webI18n?.register({
     'stat.textures': '貼圖',
     'stat.slow4g': '慢速 4G',
     'stat.files': '檔案',
+    'stat.gpu': 'GPU 記憶體',
 
     'issues.none': '沒有發現問題。',
     'preset.desc': '{description}預算 {tris} 面 · {kb} KB。',
@@ -129,5 +139,6 @@ window.mesh2webI18n?.register({
     'result.withinBudget': '符合預算',
     'result.overBudget': '超出預算：{list}',
     'result.trisOver': '{actual} > {limit} 面',
+    'result.gpuOver': 'GPU 記憶體 {actual} > {limit}',
   },
 });
