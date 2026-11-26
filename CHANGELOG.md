@@ -3,6 +3,14 @@
 All notable changes are documented here. This project follows
 [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **Site**: redesigned docs site. Dark HUD panels (bracketed wide headline,
+  glass stats card, pill navigation that tracks the current section) alternate
+  with concrete-grey sections set in extended black type. Brand palette is now
+  chrome / black / white with ice-blue accents; type is Archivo + JetBrains
+  Mono. English and Traditional Chinese kept in sync.
+
 ## 0.1.0 (2026-11-27)
 
 First public version.
