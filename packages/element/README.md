@@ -14,7 +14,7 @@ or `npm i @mesh2web/element` and `import '@mesh2web/element'`.
 - Poster first, lazy loading (`lazy` · `eager` · `interaction`), no layout shift
 - 4 KB gzip shell; three.js loads lazily as a separate chunk
 - Adaptive quality + LOD selection (`lod-src`), on-demand rendering, off-screen pause
-- Lighting presets: `studio-soft`, `studio-hard`, `outdoor`, `neon`, `flat`
+- Lighting presets: `studio-soft`, `studio-hard`, `outdoor`, `neon`, `flat`, plus a custom `environment` map (`.hdr` or image) and `tone-mapping`
 - Page-first touch gestures, keyboard control, `role="img"`, reduced-motion support
 - Tweenable `camera`, `animation.progress` and `exposure` for GSAP ScrollTrigger
 

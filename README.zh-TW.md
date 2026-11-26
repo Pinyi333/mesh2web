@@ -189,15 +189,17 @@ import '@mesh2web/element'; // 註冊 <web-model>
 | `autorotate`、`autorotate-speed` | 關閉、`12` | 每秒旋轉角度。使用者開啟 `prefers-reduced-motion` 時自動停用 |
 | `camera-orbit` | `0 75 3.7` | `方位角 俯仰角 距離`（度、度、模型半徑倍數） |
 | `exposure` | 依燈光 preset | 色調映射曝光值 |
+| `environment` | | 等距長方投影（equirect）環境圖（`.hdr`、JPG、PNG、WebP），取代 preset 的環境反射。鉻面等鏡面金屬需要高對比的環境圖。preset 的燈光仍保留 |
+| `tone-mapping` | 依燈光 preset | `aces` · `agx` · `neutral` · `none` |
 | `shadow` | 開啟 | 設為 `none` 移除接觸陰影 |
 | `quality` | `auto` | `auto` · `high` · `medium` · `low` |
 | `disable-zoom` | | 停用縮放 |
 | `autoplay` | | 自動播放第一段動畫 |
 | `draco-decoder-path` | gstatic CDN | 自架 Draco 解碼器的路徑 |
 
-**屬性與方法**：`ready`（Promise）、`camera` `{ azimuth, polar, distance, fov }`、`animation` `{ progress, play(), pause(), duration, names }`、`exposure`、`scene`、`renderer`、`quality`、`reducedMotion`、`load()`、`invalidate()`、`renderOnce()`、`snapshot(type, quality)`。
+**屬性與方法**：`ready`（Promise）、`camera` `{ azimuth, polar, distance, fov }`、`animation` `{ progress, play(), pause(), duration, names }`、`exposure`、`environment`、`scene`、`renderer`、`quality`、`reducedMotion`、`load()`、`invalidate()`、`renderOnce()`、`snapshot(type, quality)`。
 
-**事件**：`load`、`progress`、`error`（`detail.code`：`no-webgl` · `load-failed`）、`quality-change`。
+**事件**：`load`、`progress`、`error`（`detail.code`：`no-webgl` · `load-failed` · `environment-failed`；環境圖載入失敗會退回 preset，不會擋住模型）、`quality-change`。
 
 **樣式**：`--web-model-aspect-ratio`（預設 `4 / 3`）、`--web-model-accent`、`--web-model-poster-fit`、`--web-model-fade`，以及 `::part(stage | poster | canvas | prompt | progress)`。
 

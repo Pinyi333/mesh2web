@@ -189,15 +189,17 @@ The element shell is **4 KB gzip**. three.js (≈170 KB gzip) loads as a separat
 | `autorotate`, `autorotate-speed` | off, `12` | Degrees per second. Disabled under `prefers-reduced-motion` |
 | `camera-orbit` | `0 75 3.7` | `azimuth polar distance` (degrees, degrees, model radii) |
 | `exposure` | per preset | Tone-mapping exposure |
+| `environment` | | Equirectangular image (`.hdr`, JPG, PNG, WebP) used for reflections instead of the preset's environment. Chrome and other mirror-like metals need a contrasty one. The preset's lights stay |
+| `tone-mapping` | per preset | `aces` · `agx` · `neutral` · `none` |
 | `shadow` | on | `none` removes the contact shadow |
 | `quality` | `auto` | `auto` · `high` · `medium` · `low` |
 | `disable-zoom` | | |
 | `autoplay` | | Play the first animation clip |
 | `draco-decoder-path` | gstatic CDN | Self-host the Draco decoder |
 
-**Properties and methods**: `ready` (Promise), `camera` `{ azimuth, polar, distance, fov }`, `animation` `{ progress, play(), pause(), duration, names }`, `exposure`, `scene`, `renderer`, `quality`, `reducedMotion`, `load()`, `invalidate()`, `renderOnce()`, `snapshot(type, quality)`.
+**Properties and methods**: `ready` (Promise), `camera` `{ azimuth, polar, distance, fov }`, `animation` `{ progress, play(), pause(), duration, names }`, `exposure`, `environment`, `scene`, `renderer`, `quality`, `reducedMotion`, `load()`, `invalidate()`, `renderOnce()`, `snapshot(type, quality)`.
 
-**Events**: `load`, `progress`, `error` (`detail.code`: `no-webgl` · `load-failed`), `quality-change`.
+**Events**: `load`, `progress`, `error` (`detail.code`: `no-webgl` · `load-failed` · `environment-failed`; a broken environment falls back to the preset and never blocks the model), `quality-change`.
 
 **Styling**: `--web-model-aspect-ratio` (default `4 / 3`), `--web-model-accent`, `--web-model-poster-fit`, `--web-model-fade`, plus `::part(stage | poster | canvas | prompt | progress)`.
 

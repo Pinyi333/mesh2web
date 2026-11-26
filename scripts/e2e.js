@@ -4,6 +4,7 @@
  *   1. examples/basic: <web-model> loads, renders and exposes its API
  *   2. apps/docs: page runs without errors
  *   3. apps/studio: the in-browser pipeline optimizes the generated sample
+ *   4. <web-model environment>: custom reflections, tone mapping, fallback
  * Requires `npm run build`. Set MESH2WEB_CHROMIUM to use a specific Chromium.
  */
 import { chromium } from 'playwright-core';
@@ -53,6 +54,29 @@ await test('basic example: <web-model> loads', async (page) => {
   });
   if (info.state !== 'loaded' || !info.hasScene) throw new Error(`unexpected state ${JSON.stringify(info)}`);
   if (info.role !== 'img' || !info.label) throw new Error('missing accessibility attributes');
+});
+
+await test('environment: custom .hdr reflections, tone mapping, safe fallback', async (page) => {
+  await page.goto(`${base}/apps/docs/`);
+  const info = await page.evaluate(async () => {
+    const el = document.querySelector('#hero-model');
+    await Promise.race([el.ready, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 30000))]);
+    const custom = el.viewer.customEnv;
+    const result = { attr: el.environment, custom: !!custom, inUse: el.scene.environment === custom, intensity: el.scene.environmentIntensity };
+    el.setAttribute('tone-mapping', 'none');
+    result.toneNone = el.renderer.toneMapping;
+    el.removeAttribute('tone-mapping');
+    result.toneBack = el.renderer.toneMapping;
+    const failed = new Promise((resolve) => el.addEventListener('error', (e) => resolve(e.detail.code), { once: true }));
+    el.environment = 'models/missing.hdr';
+    result.code = await failed;
+    await new Promise((r) => setTimeout(r, 50));
+    result.fallback = !!el.scene.environment && el.scene.environment !== custom && el.dataset.state === 'loaded';
+    return result;
+  });
+  if (!/\.hdr$/.test(info.attr) || !info.custom || !info.inUse || info.intensity !== 1) throw new Error(`custom environment not applied: ${JSON.stringify(info)}`);
+  if (info.toneNone !== 0 || info.toneBack === 0) throw new Error(`tone-mapping attribute ignored: ${JSON.stringify(info)}`);
+  if (info.code !== 'environment-failed' || !info.fallback) throw new Error(`no fallback for a broken environment: ${JSON.stringify(info)}`);
 });
 
 await test('docs: renders without errors', async (page) => {

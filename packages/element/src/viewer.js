@@ -4,10 +4,10 @@
  */
 import {
   ACESFilmicToneMapping, AgXToneMapping, AmbientLight, AnimationMixer, Box3,
-  CanvasTexture, Color, DirectionalLight, Group, HemisphereLight, LoopRepeat,
+  CanvasTexture, Color, DirectionalLight, EquirectangularReflectionMapping, Group, HemisphereLight, LoopRepeat,
   Mesh, MeshBasicMaterial, NeutralToneMapping, NoToneMapping, PerspectiveCamera,
   PlaneGeometry, PMREMGenerator, PointLight, Scene, Sphere, SRGBColorSpace,
-  Vector3, WebGLRenderer,
+  TextureLoader, Vector3, WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -16,6 +16,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import lightingPresets from '@mesh2web/presets/lighting.json' with { type: 'json' };
 import { OrbitControls, OrbitState } from './controls.js';
 import { PIXEL_RATIO, lowerTier } from './quality.js';
+import { environmentKind } from './environment.js';
 
 const TONE_MAPPING = {
   aces: ACESFilmicToneMapping,
@@ -25,6 +26,21 @@ const TONE_MAPPING = {
 };
 
 const DEG = Math.PI / 180;
+/** Load an equirectangular environment (.hdr or any browser image). */
+async function loadEquirect(url) {
+  let texture;
+  if (environmentKind(url) === 'hdr') {
+    // Only pages that use an .hdr environment download the HDR decoder.
+    const { HDRLoader } = await import('three/examples/jsm/loaders/HDRLoader.js');
+    texture = await new HDRLoader().loadAsync(url);
+  } else {
+    texture = await new TextureLoader().loadAsync(url);
+    texture.colorSpace = SRGBColorSpace;
+  }
+  texture.mapping = EquirectangularReflectionMapping;
+  return texture;
+}
+
 const DEFAULT_DRACO = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 
 /** Soft radial gradient used as a cheap contact shadow. */
@@ -220,12 +236,53 @@ export class Viewer {
     if (preset.environment === 'room') {
       this.envTexture = this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     }
-    this.scene.environment = this.envTexture;
-    this.scene.environmentIntensity = preset.environmentIntensity ?? 1;
+    this.applyEnvironment();
     this.scene.background = preset.background ? new Color(preset.background) : null;
-    this.renderer.toneMapping = TONE_MAPPING[preset.toneMapping] ?? ACESFilmicToneMapping;
+    this.applyToneMapping();
     if (this.exposureOverride == null) this.renderer.toneMappingExposure = preset.exposure ?? 1;
     this.updateShadow();
+    this.invalidate();
+  }
+
+  /**
+   * Use a custom equirectangular environment (reflections + image-based light)
+   * instead of the preset's. Pass null to go back to the preset.
+   * @param {string | null} url
+   */
+  async setEnvironment(url) {
+    const token = (this.envToken = (this.envToken || 0) + 1);
+    if (!url) {
+      this.customEnv?.dispose();
+      this.customEnv = null;
+      this.applyEnvironment();
+      return;
+    }
+    const texture = await loadEquirect(url);
+    if (token !== this.envToken || !this.pmrem) { texture.dispose(); return; }
+    const target = this.pmrem.fromEquirectangular(texture);
+    texture.dispose();
+    this.customEnv?.dispose();
+    this.customEnv = target.texture;
+    this.applyEnvironment();
+  }
+
+  applyEnvironment() {
+    // A custom environment carries its own brightness, so it is used at full
+    // intensity; `exposure` remains the way to brighten or darken it.
+    this.scene.environment = this.customEnv || this.envTexture;
+    this.scene.environmentIntensity = this.customEnv ? 1 : (this.preset?.environmentIntensity ?? 1);
+    this.invalidate();
+  }
+
+  /** @param {'aces' | 'agx' | 'neutral' | 'none' | null} name  null = preset */
+  setToneMapping(name) {
+    this.toneMappingOverride = name;
+    this.applyToneMapping();
+  }
+
+  applyToneMapping() {
+    const name = this.toneMappingOverride || this.preset?.toneMapping;
+    this.renderer.toneMapping = TONE_MAPPING[name] ?? ACESFilmicToneMapping;
     this.invalidate();
   }
 
@@ -391,7 +448,10 @@ export class Viewer {
     this.controls.dispose();
     if (this.model) this.disposeObject(this.model);
     this.envTexture?.dispose();
+    this.customEnv?.dispose();
+    this.envToken = (this.envToken || 0) + 1;
     this.pmrem.dispose();
+    this.pmrem = null;
     this.renderer.dispose();
   }
 }

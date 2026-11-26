@@ -1,6 +1,7 @@
 import { OrbitState } from './controls.js';
 import { detectTier, hasWebGL, pickSource } from './quality.js';
 import { styles } from './styles.js';
+import { parseToneMapping } from './environment.js';
 
 /**
  * @typedef {'lazy' | 'eager' | 'interaction'} LoadingStrategy
@@ -66,7 +67,7 @@ class AnimationController {
 export class WebModel extends HTMLElement {
   static get observedAttributes() {
     return ['src', 'lod-src', 'poster', 'alt', 'lighting', 'controls', 'autorotate', 'autorotate-speed',
-      'gesture', 'camera-orbit', 'exposure', 'shadow', 'disable-zoom', 'loading'];
+      'gesture', 'camera-orbit', 'exposure', 'shadow', 'disable-zoom', 'loading', 'environment', 'tone-mapping'];
   }
 
   constructor() {
@@ -144,6 +145,8 @@ export class WebModel extends HTMLElement {
         else if (this.isConnected && !this._loading) this._scheduleLoad();
         break;
       case 'lighting': this.viewer?.setLighting(this.lighting); break;
+      case 'environment': if (this.viewer) this._envReady = this._loadEnvironment(this.viewer); break;
+      case 'tone-mapping': this.viewer?.setToneMapping(parseToneMapping(value)); break;
       case 'autorotate':
       case 'autorotate-speed': this._applyAutorotate(); break;
       case 'controls':
@@ -173,6 +176,9 @@ export class WebModel extends HTMLElement {
     return v === 'eager' || v === 'interaction' ? v : 'lazy';
   }
   set loading(v) { this.setAttribute('loading', v); }
+  /** URL of an equirectangular environment (.hdr, JPG, PNG, WebP) that replaces the preset's reflections. */
+  get environment() { return this.getAttribute('environment') || ''; }
+  set environment(v) { if (v) this.setAttribute('environment', v); else this.removeAttribute('environment'); }
   get autorotate() { return this.hasAttribute('autorotate'); }
   set autorotate(v) { this.toggleAttribute('autorotate', !!v); }
 
@@ -267,7 +273,10 @@ export class WebModel extends HTMLElement {
     viewer.adaptive = !qualityAttr || qualityAttr === 'auto';
     viewer.shadowEnabled = this.getAttribute('shadow') !== 'none';
     this.viewer = viewer;
+    viewer.setToneMapping(parseToneMapping(this.getAttribute('tone-mapping')));
     viewer.setLighting(this.lighting);
+    // Fetch the environment alongside the model; the first frame waits for both.
+    this._envReady = this._loadEnvironment(viewer);
     if (this._exposure != null) viewer.exposure = this._exposure;
     else if (this.hasAttribute('exposure')) viewer.exposure = parseFloat(this.getAttribute('exposure'));
     this._applyControls();
@@ -314,6 +323,11 @@ export class WebModel extends HTMLElement {
       viewer.disposeObject(gltf.scene);
       return;
     }
+    await this._envReady;
+    if (this.viewer !== viewer || token !== this._loadToken) {
+      viewer.disposeObject(gltf.scene);
+      return;
+    }
     viewer.setModel(gltf);
     if (this.hasAttribute('autoplay') && !this.reducedMotion) viewer.playAnimation(0);
     else if (this.animation._progress) viewer.setAnimationProgress(this.animation._progress);
@@ -322,6 +336,15 @@ export class WebModel extends HTMLElement {
     this.dataset.state = 'loaded';
     this.dispatchEvent(new CustomEvent('load', { detail: { url, quality: viewer.tier, animations: gltf.animations.map((a) => a.name) } }));
     this._resolveReady(this);
+  }
+
+  /** A broken environment never blocks the model: report it and keep the preset. */
+  _loadEnvironment(viewer) {
+    return viewer.setEnvironment(this.environment || null).catch((error) => {
+      if (this.viewer !== viewer) return;
+      viewer.setEnvironment(null);
+      this.dispatchEvent(new CustomEvent('error', { detail: { error, code: 'environment-failed' } }));
+    });
   }
 
   _fail(error) {

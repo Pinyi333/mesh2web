@@ -26,7 +26,7 @@ export interface WebModelAnimation {
 export interface WebModelEventMap extends HTMLElementEventMap {
   load: CustomEvent<{ url: string; quality: QualityTier; animations: string[] }>;
   progress: CustomEvent<{ progress: number }>;
-  error: CustomEvent<{ error: Error; code: 'no-webgl' | 'load-failed' | string }>;
+  error: CustomEvent<{ error: Error; code: 'no-webgl' | 'load-failed' | 'environment-failed' | string }>;
   'quality-change': CustomEvent<{ tier: QualityTier; fps: number }>;
 }
 
@@ -39,6 +39,8 @@ export class WebModel extends HTMLElement {
   autorotate: boolean;
   /** Tone-mapping exposure. Tweenable. */
   exposure: number;
+  /** Equirectangular environment (.hdr, JPG, PNG, WebP) replacing the preset's reflections. Empty = preset. */
+  environment: string;
   readonly camera: WebModelCamera;
   readonly animation: WebModelAnimation;
   /** Resolves with the element once the model has loaded. */
