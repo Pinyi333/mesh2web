@@ -64,7 +64,8 @@ npm publish --workspaces --access public
 ```
 
 Or create a GitHub Release: `.github/workflows/release.yml` publishes all
-workspaces with provenance, using the `NPM_TOKEN` repository secret.
+workspaces with provenance through npm Trusted Publishing (OIDC), so no npm
+token or repository secret is needed.
 
 Bump versions in every `packages/*/package.json` together, including internal
 dependency ranges such as `"@mesh2web/core": "0.1.0"`, and add an entry to
