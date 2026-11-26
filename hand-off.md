@@ -92,7 +92,8 @@ mesh2web：把 3D 模型（GLB／glTF／OBJ）優化成輕量、可一行 HTML �
 - [x] 升級 workflow 裡 Node 20 的 actions（2026-11-26 完成，待推送後確認 CI／部署綠燈）。
 - [ ] README 持續打磨（中英同步）。
 - [x] PR #10 合併、中文 README 補 `presets --json`（2026-11-26 完成）。
-- [ ] 推廣計畫剩下要用使用者帳號的事：建 npm 組織與 `NPM_TOKEN` 後發 v0.1.0 Release（同時驗證 `release.yml` 新版 Actions）；上傳 `.github/assets/social-preview.png`（Settings → General → Social preview，沒有 API 可用）。首頁網址與 topics 已於 2026-11-26 完成。
+- [x] 2026-11-27 已發布 v0.1.0 到 npm（四個套件含 provenance），並為四個套件設定 Trusted Publisher；`release.yml` 改用 OIDC，不再需要 `NPM_TOKEN`。
+- [ ] 上傳 `.github/assets/social-preview.png`（Settings → General → Social preview，沒有 API 可用）。首頁網址與 topics 已於 2026-11-26 完成。
 - [x] repo 簡介改成英文（2026-11-26 完成）。
 - [x] 官網與 Studio 中英切換（2026-11-26 完成，`feat/site-i18n`）。
 - [ ] 改官網或 Studio 的英文文案時，`js/lang.js` 的 zh-TW 要同步（漏了 e2e 會失敗）。
