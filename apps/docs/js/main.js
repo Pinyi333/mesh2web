@@ -283,16 +283,18 @@ function initMagnetic() {
    Copy-to-clipboard command
    -------------------------------------------------------------------------- */
 function initCopyButtons() {
+  // English fallback in case vendor/i18n.js failed to load.
+  const t = window.mesh2webI18n?.t ?? ((key) => ({ 'copy.copy': 'Copy', 'copy.copied': 'Copied', 'copy.select': 'Select' }[key]));
   document.querySelectorAll('[data-copy]').forEach((button) => {
     const label = button.querySelector('[data-copy-label]');
     button.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(button.dataset.copy);
-        label.textContent = 'Copied';
+        label.textContent = t('copy.copied');
       } catch {
-        label.textContent = 'Select';
+        label.textContent = t('copy.select');
       }
-      setTimeout(() => { label.textContent = 'Copy'; }, 1600);
+      setTimeout(() => { label.textContent = t('copy.copy'); }, 1600);
     });
   });
 }

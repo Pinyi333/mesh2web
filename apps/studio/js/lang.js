@@ -1,0 +1,133 @@
+/* ==========================================================================
+   mesh2web Studio — dictionaries for vendor/i18n.js (see apps/shared/i18n.js).
+   `en` holds strings used from JS (main.js); the English UI text is the HTML.
+   `zh-TW` must cover every key in both; the e2e test fails on gaps.
+   Model health-check messages come from @mesh2web/core and stay in English.
+   ========================================================================== */
+window.mesh2webI18n?.register({
+  en: {
+    'lang.switch.label': '中文',
+    'lang.switch.aria': '切換為繁體中文',
+
+    'toast.worker': 'Worker error: {message}',
+    'toast.workerStart': 'failed to start',
+    'toast.tooLarge': "That's {size}. For files over {max}, use the CLI: npx @mesh2web/cli optimize",
+    'toast.downloaded': 'Downloaded. Unzip next to your page and paste the embed code.',
+    'toast.copied': 'Embed code copied',
+    'toast.copyFailed': 'Copy failed: select the code below',
+
+    'step.reading': 'Reading {name}',
+    'step.readingFiles': 'Reading {count} files',
+    'step.sample': 'Generating a messy sample',
+    'step.starting': 'Starting',
+    'step.optimizing': 'Optimizing…',
+    'step.clean': 'Cleaning',
+    'step.normals': 'Generating normals',
+    'step.simplify': 'Simplifying',
+    'step.fit-budget': 'Fitting budget',
+    'step.textures': 'Resizing textures',
+    'step.lod': 'Building LODs',
+    'step.compress': 'Compressing',
+
+    'stat.size': 'Size',
+    'stat.triangles': 'Triangles',
+    'stat.drawCalls': 'Draw calls',
+    'stat.textures': 'Textures',
+    'stat.slow4g': 'Slow 4G',
+    'stat.files': 'Files',
+
+    'issues.none': 'No issues found.',
+    'panel.altExample': 'e.g. {name}',
+    'preset.desc': '{description} Budget {tris} tris · {kb} KB.',
+
+    'result.saved': '−{percent}% in {seconds}s',
+    'result.withinBudget': 'Within budget',
+    'result.overBudget': 'Over budget: {list}',
+    'result.trisOver': '{actual} > {limit} tris',
+  },
+  'zh-TW': {
+    'lang.switch.label': 'EN',
+    'lang.switch.aria': 'Switch to English',
+
+    'meta.description': '在瀏覽器裡把 3D 模型優化成適合網頁的版本。拖入 GLB、glTF 或 OBJ：健檢、減面、壓縮、比對、匯出，全部在本機完成。',
+
+    'bar.home': 'mesh2web 首頁',
+    'bar.privacy': '在本機執行，不會上傳任何檔案。',
+    'viewport.aria': '模型預覽',
+
+    'drop.title': '拖入模型，<br><em>立刻能放上網頁。</em>',
+    'drop.choose': '選擇檔案',
+    'drop.sample': '試用一個髒模型範例',
+    'drop.note': '健檢、減面、壓縮、前後比對，檔案不會離開你的裝置。<br>超過 200 MB？請改用 <code>npx @mesh2web/cli</code>。',
+
+    'compare.beforeAlt': '原始模型',
+    'compare.afterAlt': '優化後的模型',
+    'compare.handle': '處理前後分割線',
+    'compare.before': '處理前',
+    'compare.after': '處理後',
+
+    'panel.aria': '設定與結果',
+    'panel.source': '來源',
+    'panel.findings': '項發現',
+    'panel.replace': '換一個模型',
+    'panel.preset': 'Preset',
+    'panel.fineTune': '微調',
+    'panel.ratio': '減面目標',
+    'panel.maxTris': '面數預算',
+    'panel.texture': '貼圖最大尺寸',
+    'panel.textureKeep': '維持原尺寸',
+    'panel.geometry': '幾何壓縮',
+    'panel.geoMeshopt': 'Meshopt 壓縮',
+    'panel.geoNone': '只做量化',
+    'panel.lod': '產生 LOD',
+    'panel.fit': '自動擠進面數預算',
+    'panel.run': '開始優化',
+    'panel.look': '外觀',
+    'panel.lighting': '燈光',
+    'panel.alt': '替代文字',
+    'panel.altPlaceholder': '為螢幕閱讀器描述這個模型',
+    'panel.altExample': '例如：{name}',
+    'panel.result': '結果',
+    'panel.export': '下載 .zip',
+    'panel.copyEmbed': '複製嵌入碼',
+    'panel.embed': '嵌入碼',
+
+    'toast.worker': 'Worker 發生錯誤：{message}',
+    'toast.workerStart': '無法啟動',
+    'toast.tooLarge': '這些檔案共 {size}。超過 {max} 的檔案請改用 CLI：npx @mesh2web/cli optimize',
+    'toast.downloaded': '已下載。解壓縮到網頁旁邊，再貼上嵌入碼即可。',
+    'toast.copied': '已複製嵌入碼',
+    'toast.copyFailed': '複製失敗，請手動選取下方的程式碼',
+
+    'step.reading': '正在讀取 {name}',
+    'step.readingFiles': '正在讀取 {count} 個檔案',
+    'step.sample': '正在產生髒模型範例',
+    'step.starting': '準備中',
+    'step.optimizing': '優化中…',
+    'step.clean': '清理中',
+    'step.normals': '正在產生法線',
+    'step.simplify': '減面中',
+    'step.fit-budget': '正在擠進預算',
+    'step.textures': '正在縮放貼圖',
+    'step.lod': '正在產生 LOD',
+    'step.compress': '壓縮中',
+
+    'stat.size': '大小',
+    'stat.triangles': '面數',
+    'stat.drawCalls': 'Draw call',
+    'stat.textures': '貼圖',
+    'stat.slow4g': '慢速 4G',
+    'stat.files': '檔案',
+
+    'issues.none': '沒有發現問題。',
+    'preset.desc': '{description}預算 {tris} 面 · {kb} KB。',
+    'preset.hero': '首屏主視覺。保留細節，體積預算嚴格，讓首次繪製更快。',
+    'preset.product': '產品展示。細節與體積取得平衡，使用者可以近看。',
+    'preset.ambient': '背景或裝飾用模型。大幅減面，因為它不會是視覺焦點。',
+
+    'result.saved': '−{percent}%，耗時 {seconds} 秒',
+    'result.withinBudget': '符合預算',
+    'result.overBudget': '超出預算：{list}',
+    'result.trisOver': '{actual} > {limit} 面',
+  },
+});

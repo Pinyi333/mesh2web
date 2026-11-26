@@ -18,8 +18,10 @@ const browser = await chromium.launch({
 });
 
 let failures = 0;
-async function test(name, fn) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+async function test(name, fn, { locale = 'en-US' } = {}) {
+  // A fresh context per test: own browser language and empty localStorage.
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale });
+  const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   // Third-party fonts may be unreachable in CI sandboxes; that is not a failure.
@@ -33,7 +35,7 @@ async function test(name, fn) {
     failures++;
     console.error(`✗ ${name}\n  ${err.message}`);
   } finally {
-    await page.close();
+    await context.close();
   }
 }
 
@@ -67,6 +69,56 @@ await test('studio: optimizes the sample in a worker', async (page) => {
   const size = await page.textContent('[data-result-size]');
   if (!/KB|MB/.test(size)) throw new Error(`no result size: ${size}`);
 });
+
+/* ---------------------------------------------------------------------------
+   Language detection and switching (apps/shared/i18n.js)
+   --------------------------------------------------------------------------- */
+const langState = (page) => page.evaluate(() => ({
+  lang: document.documentElement.lang,
+  source: window.mesh2webI18n?.source,
+  missing: window.mesh2webI18n?.missing() ?? ['i18n not loaded'],
+  stored: localStorage.getItem('mesh2web-lang'),
+}));
+function expectLang(state, lang, source) {
+  if (state.lang !== lang || (source && state.source !== source)) {
+    throw new Error(`expected ${lang} from ${source}, got ${JSON.stringify(state)}`);
+  }
+  if (state.missing.length) throw new Error(`untranslated keys: ${state.missing.join(', ')}`);
+}
+
+await test('i18n: Chinese browser gets Traditional Chinese docs', async (page) => {
+  await page.goto(`${base}/apps/docs/`);
+  expectLang(await langState(page), 'zh-TW', 'browser');
+  const title = await page.textContent('.hero__title');
+  if (!/模型/.test(title)) throw new Error(`hero not translated: ${title}`);
+}, { locale: 'zh-TW' });
+
+await test('i18n: other browsers get English, ?lang= overrides', async (page) => {
+  await page.goto(`${base}/apps/docs/`);
+  expectLang(await langState(page), 'en', 'default'); // French: no match, falls back to English
+  await page.goto(`${base}/apps/docs/?lang=zh-TW`);
+  expectLang(await langState(page), 'zh-TW', 'url');
+}, { locale: 'fr-FR' });
+
+await test('i18n: the switch saves the choice for docs and Studio', async (page) => {
+  await page.goto(`${base}/apps/docs/`);
+  await page.waitForFunction(() => !document.querySelector('.preloader'), null, { timeout: 30000 });
+  await Promise.all([page.waitForEvent('load'), page.click('[data-lang-switch]')]);
+  const docs = await langState(page);
+  expectLang(docs, 'zh-TW', 'storage');
+  if (docs.stored !== 'zh-TW') throw new Error(`choice not saved: ${docs.stored}`);
+  await page.goto(`${base}/apps/studio/`);
+  expectLang(await langState(page), 'zh-TW', 'storage');
+});
+
+await test('i18n: Studio optimizes in Chinese', async (page) => {
+  await page.goto(`${base}/apps/studio/`);
+  expectLang(await langState(page), 'zh-TW', 'browser');
+  await page.click('[data-sample]');
+  await page.waitForSelector('[data-result]:not([hidden])', { timeout: 180000 });
+  const budget = await page.textContent('[data-budget]');
+  if (!/預算/.test(budget)) throw new Error(`budget not translated: ${budget}`);
+}, { locale: 'zh-HK' });
 
 await browser.close();
 server.close();
