@@ -60,6 +60,18 @@ if (shell > SHELL_BUDGET) {
   process.exitCode = 1;
 }
 
+// Docs hero: three.js "MESH / WEB" field, bundled separately from the element.
+await build({
+  entryPoints: [path.join(root, 'apps/docs/js/field.js')],
+  outfile: path.join(root, 'apps/docs/vendor/field.js'),
+  bundle: true,
+  format: 'esm',
+  minify: true,
+  target: ['es2022', 'safari16'],
+  legalComments: 'linked',
+  logLevel: 'warning',
+});
+
 // Self-host GSAP + Lenis for the docs site (no third-party CDN at runtime).
 const lib = path.join(root, 'apps/docs/vendor/lib');
 await mkdir(lib, { recursive: true });

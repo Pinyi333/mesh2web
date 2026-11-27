@@ -104,11 +104,11 @@ function initPreloader() {
   lenis?.stop();
 
   const setTarget = (v) => { state.target = Math.max(state.target, v); };
-  model?.addEventListener('progress', (e) => setTarget(e.detail.progress * 92));
-  // Never block on the model: poster is already a complete first paint.
+  addEventListener('field:progress', (e) => setTarget(e.detail * 92));
+  // Never block on the model: the poster is already a complete first paint.
   const modelDone = Promise.race([
-    model?.ready ?? Promise.resolve(),
-    new Promise((r) => setTimeout(r, 4000)),
+    new Promise((r) => addEventListener('field:ready', r, { once: true })),
+    new Promise((r) => setTimeout(r, 5000)),
   ]);
   const minTime = new Promise((r) => setTimeout(r, CONFIG.preloader.min * 1000));
 
@@ -144,20 +144,17 @@ function initHeroReveal() {
     gsap.set(title, { visibility: 'visible' });
   }
   tl.fromTo('[data-hero-fade]', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: CONFIG.ease.out, stagger: 0.08 }, 0.35)
-    .from('[data-hero-model]', { y: 80, opacity: 0, duration: 1.6, ease: CONFIG.ease.expo }, 0.1);
-
-  const model = document.getElementById('hero-model');
-  // Swing the camera into place once the model is ready: a quiet "hello".
-  model?.ready.then(() => {
-    gsap.from(model.camera, { azimuth: -110, distance: 4.6, duration: 2.4, ease: CONFIG.ease.expo });
-  });
+    .from('.floor:not(.floor--title), .field__label', { opacity: 0, duration: 1.2, ease: CONFIG.ease.out, stagger: 0.08 }, 0.2);
+  // Sweep the scan line across once: the first thing a visitor sees is the transformation.
+  const field = window.mesh2webField;
+  if (field) gsap.fromTo(field, { split: -3.2 }, { split: 0.4, duration: 2.6, ease: 'expo.out', delay: 0.2, onComplete: () => { field.idle(); } });
 }
 
 function initHeroParallax() {
-  // Desktop only: on mobile the model sits above the copy and must not drift onto it.
-  gsap.matchMedia().add('(min-width: 901px)', () => {
-    gsap.to('[data-hero-model]', {
-      yPercent: 14, ease: 'none',
+  // The floor tilts away a little as the hero scrolls out.
+  gsap.matchMedia().add('(min-width: 721px)', () => {
+    gsap.to('.field', {
+      scale: 0.94, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
     });
   });

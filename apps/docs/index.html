@@ -17,8 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="preload" as="image" href="models/sculpture.webp">
-  <script>document.documentElement.classList.add('js');</script>
+    <script>document.documentElement.classList.add('js');</script>
   <script src="vendor/i18n.js"></script>
   <script type="module" src="vendor/element/web-model.js"></script>
 </head>
@@ -33,59 +32,80 @@
     </div>
   </div>
 
-  <header class="nav">
-    <a class="nav__logo" href="#top" aria-label="mesh2web home" data-i18n-attr="aria-label:nav.home">
+  <header class="topbar">
+    <a class="topbar__logo" href="#top" aria-label="mesh2web home" data-i18n-attr="aria-label:nav.home">
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 10v12L16 29 4 22V10z"/><path d="M4 10l12 7 12-7M16 17v12"/></svg>
-      <span>mesh2web</span>
+      <span class="topbar__meta"><b>mesh2web v0.1</b><i aria-hidden="true"></i><br><span data-i18n="top.meta">Open source · MIT</span></span>
     </a>
-    <nav class="nav__links" aria-label="Primary" data-i18n-attr="aria-label:nav.aria">
+    <nav class="topbar__links" aria-label="Primary" data-i18n-attr="aria-label:nav.aria">
       <a href="#pipeline" data-i18n="nav.pipeline">Pipeline</a>
       <a href="#element" data-i18n="nav.element">Element</a>
       <a href="#usage" data-i18n="nav.usage">Usage</a>
       <a href="studio/">Studio</a>
     </nav>
-    <div class="nav__actions">
-      <button class="nav__lang" type="button" data-lang-switch lang="zh-TW" aria-label="切換為繁體中文">中文</button>
-      <a class="nav__cta" href="https://github.com/pinyi333/mesh2web" data-magnetic>
-        <span>GitHub</span><span aria-hidden="true">↗</span>
-      </a>
+    <div class="topbar__actions">
+      <button class="topbar__lang" type="button" data-lang-switch lang="zh-TW" aria-label="切換為繁體中文">中文</button>
+      <a class="topbar__cta" href="https://github.com/pinyi333/mesh2web" data-magnetic><span>GitHub</span><span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
   <main id="main">
-    <!-- ============================== HERO ============================== -->
+    <!-- ============================== HERO: MESH / WEB FIELD ============================== -->
     <section class="hero" id="top">
-      <div class="hero__copy">
-        <p class="eyebrow" data-hero-fade data-i18n="hero.eyebrow">Open source · MIT · No framework required</p>
-        <h1 class="hero__title" data-i18n="hero.title">Any 3D model.<br><em>Web-ready</em> in<br>one command.</h1>
-        <p class="hero__lead" data-hero-fade data-i18n="hero.lead">mesh2web inspects, cleans, simplifies and compresses your models, then ships them in a lightweight <code>&lt;web-model&gt;</code> element built for scroll stories and GSAP.</p>
-        <div class="hero__actions" data-hero-fade>
-          <button class="command" type="button" data-copy="npx @mesh2web/cli optimize model.glb" data-magnetic>
-            <span class="command__prompt" aria-hidden="true">$</span>
-            <span class="command__text">npx @mesh2web/cli optimize model.glb</span>
-            <span class="command__hint" data-copy-label data-i18n="copy.copy">Copy</span>
+      <div class="field" data-field>
+        <canvas class="field__canvas" aria-hidden="true"></canvas>
+        <img class="field__poster" src="models/field.webp" alt="" aria-hidden="true">
+
+        <div class="field__layer">
+          <div class="floor floor--title" data-floor="-3.35,4.3,0.8">
+            <span class="floor__tag">1.0</span>
+            <h1 class="hero__title" data-i18n="hero.title">Any 3D model.<br>One command.<br><em>Web-ready.</em></h1>
+          </div>
+          <div class="floor floor--lead" data-floor="2.1,0.9,0.56">
+            <span class="floor__tag">2.0</span>
+            <p data-i18n="hero.lead">A raw scan, 110 MB and 1.3M triangles. Drag the line: mesh2web inspects, cleans, simplifies and compresses it into a 321 KB <code>&lt;web-model&gt;</code>.</p>
+          </div>
+
+          <p class="field__label field__label--mesh" data-anchor="mesh">
+            <span class="field__label-tag" data-i18n="hero.raw">Raw scan</span>
+            <span class="field__label-row">110 MB<i>·</i><span data-i18n="hero.rawTris">1.31M tris</span></span>
+          </p>
+          <p class="field__label field__label--web" data-anchor="web">
+            <span class="field__label-tag" data-i18n="hero.web">Web-ready</span>
+            <span class="field__label-row">321 KB<i>·</i><span data-i18n="hero.webTris">58k tris</span></span>
+          </p>
+
+          <button class="field__handle" type="button" data-handle aria-label="Drag to compare the raw mesh and the web-ready model" data-i18n-attr="aria-label:hero.handle">
+            <span class="field__handle-side" aria-hidden="true">Mesh</span><span class="field__handle-side field__handle-side--web" aria-hidden="true">Web</span>
+            <span class="field__handle-knob" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6 3 12l6 6M15 6l6 6-6 6"/></svg></span>
           </button>
-          <a class="link-arrow" href="studio/" data-i18n="hero.studio">Try Studio in your browser <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="dock" data-hero-fade>
+          <button class="dock__round" type="button" data-copy="npx @mesh2web/cli optimize model.glb" aria-label="Copy the command" data-i18n-attr="aria-label:hero.copyAria">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>
+            <span class="sr-only" data-copy-label data-i18n="copy.copy">Copy</span>
+          </button>
+          <button class="dock__bar" type="button" data-copy="npx @mesh2web/cli optimize model.glb">
+            <i aria-hidden="true"></i>
+            <code>npx @mesh2web/cli optimize model.glb</code>
+            <span class="dock__hint" data-copy-label data-i18n="copy.copy">Copy</span>
+          </button>
+          <a class="dock__round dock__round--lime" href="studio/" aria-label="Try Studio in your browser" data-i18n-attr="aria-label:hero.studioAria">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 7.5v9L12 21 4 16.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg>
+          </a>
         </div>
       </div>
-      <div class="hero__stage" data-hero-model>
-        <web-model
-          id="hero-model"
-          src="models/sculpture.glb"
-          lod-src="models/sculpture.lod1.glb"
-          poster="models/sculpture.webp"
-          alt="A cream ceramic sculpture circled by a thin gold ribbon, slowly rotating"
-          data-i18n-attr="alt:hero.modelAlt"
-          lighting="studio-soft"
-          camera-orbit="-20 72 3.3"
-          autorotate
-          loading="eager"
-        >
-          <img src="models/sculpture.webp" alt="A cream ceramic sculpture circled by a thin gold ribbon" data-i18n-attr="alt:hero.posterAlt">
-        </web-model>
-        <p class="hero__caption" aria-hidden="true"><span data-i18n="hero.drag">Drag to rotate</span><span data-i18n="hero.stats">219 KB · 52k tris</span></p>
+
+      <div class="hero__foot">
+        <nav aria-label="Links" data-i18n-attr="aria-label:hero.linksAria">
+          <a href="https://github.com/pinyi333/mesh2web">GitHub</a>
+          <a href="https://www.npmjs.com/package/@mesh2web/cli">npm</a>
+          <a href="studio/">Studio</a>
+          <a href="https://github.com/pinyi333/mesh2web#readme" data-i18n-attr="href:footer.readmeHref">Docs</a>
+        </nav>
+        <p aria-hidden="true">Mesh / <b>Web</b></p>
       </div>
-      <div class="hero__scroll" aria-hidden="true"><span></span><b data-i18n="hero.scroll">Scroll</b></div>
     </section>
 
     <!-- ============================== MARQUEE ============================== -->
@@ -300,5 +320,6 @@ gsap.timeline({
   <script src="vendor/lib/SplitText.min.js"></script>
   <script src="vendor/lib/lenis.min.js"></script>
   <script src="js/main.js" defer></script>
+  <script type="module" src="vendor/field.js"></script>
 </body>
 </html>
